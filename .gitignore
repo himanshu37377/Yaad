@@ -1,0 +1,35 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.db
+*.sqlite3
+data/
+.DS_Store
+*.egg-info/
+# Superseded eval versions are not published (V3 is the published one).
+eval/real_eval/
+eval/real_eval_v2/
+eval/image_eval/
+# Raw V3 run dumps stay out; the curated report + grades are committed.
+eval/real_eval_v3/results/*
+!eval/real_eval_v3/results/report.md
+!eval/real_eval_v3/results/manual_grades.json
+# Internal audit notes, design diaries, and billing logs, not project docs.
+docs/ANTI_PROJECT_AND_RAG_ASSESSMENT.md
+docs/INDEPENDENT_PROJECT_AUDIT.md
+docs/RELIABILITY_VENUE_IMAGE_REPORT.md
+docs/capability_usage.json
+docs/CLAIM_RELEVANCE_DESIGN.md
+docs/HYBRID_RETRIEVAL_DESIGN.md
+docs/TEMPORAL_MEMORY_LEDGER_DESIGN.md
+docs/VALIDATION_RESULTS.md
+docs/FINAL_ARCHITECTURE_AUDIT.md
+docs/capabilities.md
+# Local UI captures, not documentation.
+docs/ui-reference/
+docs/screenshots/
+# Real voice recordings beyond the published consented fixture are excluded.
+yaad_cross_file_test/*.wav
+yaad_cross_file_test/*.mp3

@@ -1,0 +1,4 @@
+{"question": "What is the roll number on the admit card?", "file": "synthetic_admit_card.pdf", "value": "YAAD-482731", "page": 1}
+{"question": "What is the exam date?", "file": "synthetic_admit_card.pdf", "value": "2026-11-02", "page": 1}
+{"question": "What is the application deadline in the first notice?", "file": "deadline_notice_a.pdf", "value": "2026-11-10", "page": 1}
+{"question": "What is the applicant's blood group?", "file": null, "value": null, "page": null}

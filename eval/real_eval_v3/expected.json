@@ -1,0 +1,48 @@
+{
+  "version": 3,
+  "frozen": true,
+  "note": "Written before any V3 live run. Never edit after seeing results.",
+  "folders": ["slotgrid", "chains", "amounts3", "undecided3", "gallery3", "controls3"],
+  "extraction_expectations": {
+    "chains": [
+      {"slot": "venue-current", "record_type": "decision", "must_mention": ["Crystal Pavilion"], "statement_kind": "explicit", "status": "decided"},
+      {"slot": "budget-current", "record_type": "decision", "must_mention": ["30000"], "statement_kind": "explicit", "status": "decided"},
+      {"slot": "deadline-current", "record_type": "deadline", "date_value": "2027-04-09", "statement_kind": "explicit"},
+      {"slot": "venue-original", "record_type": "decision", "must_mention": ["Riverside Hall"], "status": "superseded"},
+      {"slot": "deadline-middle", "record_type": "deadline", "date_value": "2027-04-02", "status": "superseded"}
+    ],
+    "amounts3": [
+      {"slot": "amount-current", "record_type": "decision", "must_mention": ["18000"], "statement_kind": "explicit"},
+      {"slot": "amount-quoted", "record_type": "decision", "must_mention": ["12000"], "status": "superseded"}
+    ]
+  },
+  "link_reliability": {"folders": ["chains", "amounts3"], "runs": 5},
+  "questions": [
+    {"id": "S1", "folder": "slotgrid", "question": "What is the Harbor Fest venue?", "expect_status": ["answered"], "current_value": "Marina Hall", "category": "slot-grid"},
+    {"id": "S2", "folder": "slotgrid", "question": "What is the Harbor Fest budget?", "expect_status": ["answered"], "current_amount": "INR40000", "category": "slot-gate"},
+    {"id": "S3", "folder": "slotgrid", "question": "What is the Harbor Fest registration deadline?", "expect_status": ["answered"], "current_date": "2027-05-03", "category": "slot-grid"},
+    {"id": "S4", "folder": "slotgrid", "question": "What is the Harbor Fest deposit?", "expect_status": ["answered", "unverified"], "current_amount": "INR5000", "category": "incidental-amount"},
+    {"id": "H1", "folder": "chains", "question": "What is the Spring Fest venue?", "expect_status": ["answered"], "current_value": "Crystal Pavilion", "stale_values": ["Riverside Hall", "Grand Arena"], "category": "three-step-chain"},
+    {"id": "H2", "folder": "chains", "question": "What is the Spring Fest budget?", "expect_status": ["answered"], "current_amount": "INR30000", "stale_amounts": ["INR20000", "INR25000"], "category": "three-step-chain"},
+    {"id": "H3", "folder": "chains", "question": "What is the registration deadline?", "expect_status": ["answered"], "current_date": "2027-04-09", "stale_dates": ["2027-03-01", "2027-04-02"], "category": "three-step-chain"},
+    {"id": "H4", "folder": "chains", "question": "What was the original Spring Fest venue?", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "history"},
+    {"id": "H5", "folder": "chains", "question": "What changed?", "expect_status": ["answered"], "current_value": "Crystal Pavilion", "category": "temporal-ledger"},
+    {"id": "H6", "folder": "chains", "question": "List the superseded memories", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "memory-status"},
+    {"id": "H7", "folder": "chains", "question": "Who will confirm the final budget?", "expect_status": ["answered"], "current_value": "Arjun", "category": "proposal-control"},
+    {"id": "M1", "folder": "amounts3", "question": "What is the hall hire cost for Spring Fest?", "expect_status": ["answered"], "current_amount": "INR18000", "stale_amounts": ["INR12000", "INR15000"], "category": "quoted-to-confirmed"},
+    {"id": "M2", "folder": "amounts3", "question": "What was the original hall hire cost?", "expect_status": ["answered"], "current_amount": "INR12000", "category": "history"},
+    {"id": "D1", "folder": "undecided3", "question": "What is the decided snack budget?", "expect_status": ["unverified"], "category": "unresolved-status"},
+    {"id": "D2", "folder": "undecided3", "question": "What remains undecided?", "expect_status": ["answered"], "current_value": "snack budget", "category": "undecided-listing"},
+    {"id": "D3", "folder": "undecided3", "question": "What is the Spring Fest catering cost?", "expect_status": ["conflict"], "current_amount": "INR8000", "second_amount": "INR9500", "must_cite_files": ["catering_a.txt", "catering_b.txt"], "category": "genuine-conflict"},
+    {"id": "G1", "folder": "gallery3", "question": "What does the poster photo show?", "expect_status": ["answered"], "current_value": "Grand Arena", "category": "vision-fallback"},
+    {"id": "G2", "folder": "gallery3", "question": "show photos of the red bicycle", "expect_status": ["answered"], "current_value": "bicycle", "category": "photo-ranking"},
+    {"id": "G3", "folder": "gallery3", "question": "show me the photos", "expect_status": ["answered"], "category": "photo-browsing"},
+    {"id": "K1", "folder": "controls3", "question": "What is the Autumn Fest budget?", "expect_status": ["not_found", "unverified"], "category": "slot-gate-trap"},
+    {"id": "K2", "folder": "controls3", "question": "What is the Spring Fest venue?", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "false-conflict-control"},
+    {"id": "K3", "folder": "controls3", "question": "What is the Autumn Fest venue?", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "false-conflict-control"},
+    {"id": "U1", "folder": "slotgrid", "question": "Who is the Harbor Fest chief guest?", "expect_status": ["not_found", "unverified"], "category": "abstention"},
+    {"id": "U2", "folder": "chains", "question": "What is on the catering menu?", "expect_status": ["not_found", "unverified"], "category": "abstention"},
+    {"id": "U3", "folder": "controls3", "question": "What is the Autumn Fest deadline?", "expect_status": ["not_found", "unverified"], "category": "abstention-trap"},
+    {"id": "U4", "folder": "gallery3", "question": "What is the poster printing cost?", "expect_status": ["not_found", "unverified"], "category": "abstention"}
+  ]
+}

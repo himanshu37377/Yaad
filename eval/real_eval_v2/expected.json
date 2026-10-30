@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "frozen": true,
+  "note": "Written before any V2 live run. Never edit after seeing results; publish a dated v3 instead.",
+  "folders": ["lifecycle2", "amounts", "gallery", "conflicts2", "controls"],
+  "extraction_expectations": {
+    "lifecycle2": [
+      {"slot": "venue-current", "record_type": "decision", "must_mention": ["Crystal Pavilion"], "statement_kind": "explicit", "status": "decided"},
+      {"slot": "budget-current", "record_type": "decision", "must_mention": ["28000"], "statement_kind": "explicit", "status": "decided"},
+      {"slot": "deadline-current", "record_type": "deadline", "date_value": "2027-04-09", "statement_kind": "explicit"},
+      {"slot": "venue-original", "record_type": "decision", "must_mention": ["Riverside Hall"], "status": "superseded"},
+      {"slot": "deadline-previous", "record_type": "deadline", "date_value": "2027-04-02", "status": "superseded"}
+    ],
+    "amounts": [
+      {"slot": "amount-current", "record_type": "decision", "must_mention": ["18000"], "statement_kind": "explicit"},
+      {"slot": "amount-original", "record_type": "decision", "must_mention": ["12000"], "status": "superseded"}
+    ]
+  },
+  "link_reliability": {
+    "folders": ["lifecycle2", "amounts"],
+    "runs": 5,
+    "expected_edges": {
+      "lifecycle2": ["venue: Riverside Hall -> Crystal Pavilion chain", "deadline: 2027-03-01 -> 2027-04-09 chain", "budget: 20000 -> 28000 chain"],
+      "amounts": ["amount: 12000 -> 18000 chain"]
+    }
+  },
+  "questions": [
+    {"id": "A1", "folder": "lifecycle2", "question": "What is the Spring Fest venue?", "expect_status": ["answered"], "current_value": "Crystal Pavilion", "stale_values": ["Riverside Hall", "Grand Arena"], "category": "lifecycle-current"},
+    {"id": "A2", "folder": "lifecycle2", "question": "What is the Spring Fest budget?", "expect_status": ["answered"], "current_amount": "INR28000", "stale_amounts": ["INR20000", "INR25000"], "category": "lifecycle-current"},
+    {"id": "A3", "folder": "lifecycle2", "question": "What is the registration deadline?", "expect_status": ["answered"], "current_date": "2027-04-09", "stale_dates": ["2027-03-01", "2027-04-02"], "category": "lifecycle-current"},
+    {"id": "A4", "folder": "lifecycle2", "question": "What was the original Spring Fest venue?", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "history"},
+    {"id": "A5", "folder": "lifecycle2", "question": "What was the previous registration deadline before the final one?", "expect_status": ["answered"], "current_date": "2027-04-02", "category": "history"},
+    {"id": "A6", "folder": "lifecycle2", "question": "What changed?", "expect_status": ["answered"], "current_value": "Crystal Pavilion", "category": "temporal-ledger"},
+    {"id": "A7", "folder": "lifecycle2", "question": "Is Riverside Hall still the Spring Fest venue?", "expect_status": ["answered"], "current_value": "Crystal Pavilion", "category": "stale-trap"},
+    {"id": "A8", "folder": "lifecycle2", "question": "Who will confirm the final budget?", "expect_status": ["answered"], "current_value": "Priya", "category": "proposal-vs-confirmation"},
+    {"id": "A9", "folder": "lifecycle2", "question": "List the superseded memories", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "memory-status"},
+    {"id": "M1", "folder": "amounts", "question": "What is the venue hire cost for Spring Fest?", "expect_status": ["answered"], "current_amount": "INR18000", "stale_amounts": ["INR12000", "INR15000"], "category": "amount-chain"},
+    {"id": "M2", "folder": "amounts", "question": "What was the original venue hire cost?", "expect_status": ["answered"], "current_amount": "INR12000", "category": "history"},
+    {"id": "G1", "folder": "gallery", "question": "What does the poster photo show?", "expect_status": ["answered"], "current_value": "Grand Arena", "category": "vision-fallback"},
+    {"id": "G2", "folder": "gallery", "question": "show photos of the bicycle", "expect_status": ["answered"], "current_value": "bicycle", "category": "photo-ranking"},
+    {"id": "G3", "folder": "gallery", "question": "What venue does the Grand Arena photo show?", "expect_status": ["answered"], "current_value": "Grand Arena", "category": "photo-content"},
+    {"id": "C1", "folder": "conflicts2", "question": "What is the Spring Fest catering cost?", "expect_status": ["conflict"], "current_amount": "INR8000", "second_amount": "INR9500", "must_cite_files": ["source_a.txt", "source_b.txt"], "category": "genuine-conflict"},
+    {"id": "C2", "folder": "conflicts2", "question": "Do the sources agree on the catering cost?", "expect_status": ["conflict", "answered"], "current_amount": "INR8000", "second_amount": "INR9500", "must_cite_files": ["source_a.txt", "source_b.txt"], "category": "genuine-conflict"},
+    {"id": "C3", "folder": "conflicts2", "question": "What is the decided snack budget?", "expect_status": ["unverified"], "category": "amount-backstop"},
+    {"id": "C4", "folder": "conflicts2", "question": "What is the Spring Fest catering cost?", "expect_status": ["conflict"], "current_amount": "INR8000", "second_amount": "INR9500", "category": "conflict-persistence", "repeat_of": "C1"},
+    {"id": "K1", "folder": "controls", "question": "What is the Spring Fest venue?", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "false-conflict-control"},
+    {"id": "K2", "folder": "controls", "question": "What is the Autumn Fest venue?", "expect_status": ["answered"], "current_value": "Riverside Hall", "category": "false-conflict-control"},
+    {"id": "K3", "folder": "lifecycle2", "question": "What is the library grant amount?", "expect_status": ["answered"], "current_amount": "INR5000", "category": "distractor-isolation"},
+    {"id": "U1", "folder": "lifecycle2", "question": "What is on the catering menu?", "expect_status": ["not_found", "unverified"], "category": "abstention"},
+    {"id": "U2", "folder": "lifecycle2", "question": "Who is the chief guest at Spring Fest?", "expect_status": ["not_found", "unverified"], "category": "abstention"},
+    {"id": "U3", "folder": "controls", "question": "What is the Autumn Fest budget?", "expect_status": ["not_found", "unverified"], "category": "abstention-trap"}
+  ]
+}

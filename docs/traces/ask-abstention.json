@@ -1,0 +1,14 @@
+{
+  "status": "not_found",
+  "answer": "No matching evidence was found in the selected indexed scope.",
+  "values": [],
+  "evidence": [],
+  "candidates": [],
+  "disclosure": [],
+  "memory": {
+    "used": false,
+    "record_ids": [],
+    "claims": [],
+    "conflicts": []
+  }
+}

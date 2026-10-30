@@ -1,0 +1,72 @@
+{
+  "status": "cloud_unavailable",
+  "answer": "I found relevant evidence, but cloud review is disabled in app settings. Review the cited passages or enable cloud processing.",
+  "answer_sensitive": false,
+  "values": [
+    {
+      "field": "amount",
+      "value": "₹25,000",
+      "verification": "verified_text",
+      "evidence_ids": [
+        "ev_4e16da8e9c3b"
+      ]
+    },
+    {
+      "field": "amount",
+      "value": "₹150",
+      "verification": "verified_text",
+      "evidence_ids": [
+        "ev_4e16da8e9c3b"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev_4e16da8e9c3b",
+      "file": "/private/tmp/traces/corpus/event_proposal.pdf",
+      "locator": {
+        "type": "pdf_page",
+        "page": 1,
+        "quote": "",
+        "bbox": null
+      },
+      "quote": "Autumn Fest 2026 — Event Proposal\nStudent organizing committee · Inter-college tech and cultural fest\nPurpose\nAutumn Fest is the college's annual one-day fest combining technical workshops, a project\nshowcase, and cultural performances. The 2026 edition aims to give first- and second-year\nstudents a low-cost way to present their work and meet peers from neighbouring colleges.\nEvent details\nThe event will be held on November 18, 2026. The initial budget approved by the committee is\n₹25,000. Entry is open to all college students at a registration fee of ₹150 per person, and\nregistration closes o",
+      "preview_url": "/api/evidence/ev_4e16da8e9c3b/preview",
+      "sensitive": false,
+      "historical": false,
+      "record_ids": []
+    },
+    {
+      "id": "ev_83fb6c6c2f97",
+      "file": "/private/tmp/traces/corpus/organizer_notes.txt",
+      "locator": {
+        "type": "text_span",
+        "section": "organizer_notes",
+        "start": 0,
+        "end": 477
+      },
+      "quote": "Organizer notes - Autumn Fest planning (Nov 3, 2026)\n\n- Next planning meeting: November 6, 2026, seminar hall.\n- Need at least 6 volunteers for stage, registration, and crowd duty.\n- Volunteer list due: November 8, 2026.\n- Venue confirmation deadline: November 10, 2026.\n- Poster must be ready by November 12, 2026.\n- Three workshop topics still need to be decided; collect suggestions before the meeting.\n- Riya to confirm the sound-system quote; Arjun to book the projector.\n",
+      "preview_url": "/api/evidence/ev_83fb6c6c2f97/preview",
+      "sensitive": false,
+      "historical": false,
+      "record_ids": []
+    }
+  ],
+  "candidates": [
+    {
+      "file": "/private/tmp/traces/corpus/event_proposal.pdf",
+      "partial": false
+    },
+    {
+      "file": "/private/tmp/traces/corpus/organizer_notes.txt",
+      "partial": false
+    }
+  ],
+  "disclosure": [],
+  "memory": {
+    "used": false,
+    "record_ids": [],
+    "claims": [],
+    "conflicts": []
+  }
+}

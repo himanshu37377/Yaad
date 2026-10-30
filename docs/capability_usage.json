@@ -1,0 +1,898 @@
+{
+  "scope": "Yaad capability-suite calls only; excludes earlier exploratory API calls and other team usage",
+  "calls": [
+    {
+      "timestamp_utc": "2026-10-28T12:19:28.313236+00:00",
+      "name": "PDF: deadline_notice_a.pdf",
+      "status": "FAIL",
+      "constraint": "invalid_or_truncated_json_output (response reached its 384-token output limit)",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 6298,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 384,
+        "output_tokens_details": {
+          "reasoning_tokens": 328
+        },
+        "total_tokens": 3066
+      },
+      "cost_usd": 0.0049845,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e850cd714a6d89b4468f"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:19:34.951443+00:00",
+      "name": "PDF: deadline_notice_b.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 6632,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 324,
+        "output_tokens_details": {
+          "reasoning_tokens": 266
+        },
+        "total_tokens": 3006
+      },
+      "cost_usd": 0.0047295,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e8565e853460b3394201"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:19:41.054238+00:00",
+      "name": "PDF: synthetic_admit_card.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 6101,
+      "usage": {
+        "input_tokens": 2690,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 379,
+        "output_tokens_details": {
+          "reasoning_tokens": 309
+        },
+        "total_tokens": 3069
+      },
+      "cost_usd": 0.00497325,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e85c96fb9cff5d2742c0"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:19:45.005970+00:00",
+      "name": "Image scene understanding",
+      "status": "FAIL",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 3949,
+      "usage": {
+        "input_tokens": 351,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 320,
+        "output_tokens_details": {
+          "reasoning_tokens": 318
+        },
+        "total_tokens": 671
+      },
+      "cost_usd": 0.00179875,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e860d34661970b0c438c"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:25:37.689279+00:00",
+      "name": "PDF: deadline_notice_a.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 6406,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 118,
+        "output_tokens_details": {
+          "reasoning_tokens": 48
+        },
+        "total_tokens": 2800
+      },
+      "cost_usd": 0.003854,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e9c1370de8ebb4654b55"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:25:40.981151+00:00",
+      "name": "Image scene understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 3280,
+      "usage": {
+        "input_tokens": 351,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 370,
+        "output_tokens_details": {
+          "reasoning_tokens": 132
+        },
+        "total_tokens": 721
+      },
+      "cost_usd": 0.00201125,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e9c4c5ba05864bcf458a"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:25:44.066119+00:00",
+      "name": "Screenshot text understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 3080,
+      "usage": {
+        "input_tokens": 663,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 76,
+        "output_tokens_details": {
+          "reasoning_tokens": 36
+        },
+        "total_tokens": 739
+      },
+      "cost_usd": 0.00115175,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e9c7410ce544f6144ad8"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:25:46.787696+00:00",
+      "name": "Two-image comparison",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "two PNG input_image blocks",
+      "status_code": 200,
+      "duration_ms": 2719,
+      "usage": {
+        "input_tokens": 693,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 212,
+        "output_tokens_details": {
+          "reasoning_tokens": 151
+        },
+        "total_tokens": 905
+      },
+      "cost_usd": 0.00176725,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e9ca73e3954cb5d64f9b"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:25:49.043855+00:00",
+      "name": "Structured output + Pydantic",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "Responses text.format json_schema; Pydantic validation",
+      "status_code": 200,
+      "duration_ms": 2251,
+      "usage": {
+        "input_tokens": 41,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 106,
+        "output_tokens_details": {
+          "reasoning_tokens": 76
+        },
+        "total_tokens": 147
+      },
+      "cost_usd": 0.00050175,
+      "reserved_cost_usd": 0,
+      "response_id": "resp_6ae1e9cca90f5a5296a24249"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:25:53.000000+00:00",
+      "name": "Synthetic speech transcription",
+      "status": "PASS",
+      "model": "muse-voice-transcribe-1.0",
+      "endpoint": "/asr/transcribe",
+      "format": "mono, 16-bit PCM WAV at 24 kHz; multipart transcription",
+      "status_code": 200,
+      "duration_ms": 2760,
+      "audio_duration_seconds": 4.17,
+      "audio_bytes": 204286,
+      "transcript_turns": 1,
+      "cost_usd": 0.0002085,
+      "reserved_cost_usd": 0
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:40:11.497515+00:00",
+      "name": "PDF: deadline_notice_a.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 38967,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 112,
+        "output_tokens_details": {
+          "reasoning_tokens": 51
+        },
+        "total_tokens": 2794
+      },
+      "cost_usd": 0.0038285,
+      "response_id": "resp_6ae1ed2b13ce4347ed204e33"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:40:19.234485+00:00",
+      "name": "PDF: deadline_notice_b.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 7733,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 126,
+        "output_tokens_details": {
+          "reasoning_tokens": 56
+        },
+        "total_tokens": 2808
+      },
+      "cost_usd": 0.003888,
+      "response_id": "resp_6ae1ed33533dd850f71e4c5c"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:40:58.207703+00:00",
+      "name": "PDF: synthetic_admit_card.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 38968,
+      "usage": {
+        "input_tokens": 2690,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 130,
+        "output_tokens_details": {
+          "reasoning_tokens": 38
+        },
+        "total_tokens": 2820
+      },
+      "cost_usd": 0.003915,
+      "response_id": "resp_6ae1ed5ad56e7538a22a4e30",
+      "validation_note": "Valid JSON was returned inside a Markdown code fence; validator updated to parse fenced JSON."
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:41:11.704116+00:00",
+      "name": "Image scene understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 13492,
+      "usage": {
+        "input_tokens": 351,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 277,
+        "output_tokens_details": {
+          "reasoning_tokens": 64
+        },
+        "total_tokens": 628
+      },
+      "cost_usd": 0.001616,
+      "response_id": "resp_6ae1ed677b5a3450b8784d76"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:41:16.651472+00:00",
+      "name": "Screenshot text understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 4938,
+      "usage": {
+        "input_tokens": 663,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 149,
+        "output_tokens_details": {
+          "reasoning_tokens": 113
+        },
+        "total_tokens": 812
+      },
+      "cost_usd": 0.001462,
+      "response_id": "resp_6ae1ed6caaadf0b333bd4703"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:41:18.869111+00:00",
+      "name": "Screenshot table extraction",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 2212,
+      "usage": {
+        "input_tokens": 663,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 130,
+        "output_tokens_details": {
+          "reasoning_tokens": 63
+        },
+        "total_tokens": 793
+      },
+      "cost_usd": 0.00138125,
+      "response_id": "resp_6ae1ed6ee5b258a94258447f"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:41:21.512690+00:00",
+      "name": "Chart reading",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 2640,
+      "usage": {
+        "input_tokens": 668,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 81,
+        "output_tokens_details": {
+          "reasoning_tokens": 34
+        },
+        "total_tokens": 749
+      },
+      "cost_usd": 0.00117925,
+      "response_id": "resp_6ae1ed70750b387777de42dd"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:41:23.781790+00:00",
+      "name": "Two-image comparison",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "two PNG input_image blocks",
+      "status_code": 200,
+      "duration_ms": 2264,
+      "usage": {
+        "input_tokens": 693,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 189,
+        "output_tokens_details": {
+          "reasoning_tokens": 122
+        },
+        "total_tokens": 882
+      },
+      "cost_usd": 0.0016695,
+      "response_id": "resp_6ae1ed73cde57b80fafe469b"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:41:25.688411+00:00",
+      "name": "Structured output + Pydantic",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "Responses text.format json_schema; Pydantic validation",
+      "status_code": 200,
+      "duration_ms": 1898,
+      "usage": {
+        "input_tokens": 41,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 111,
+        "output_tokens_details": {
+          "reasoning_tokens": 81
+        },
+        "total_tokens": 152
+      },
+      "cost_usd": 0.000523,
+      "response_id": "resp_6ae1ed75bdaedbcc0f6e4bd0"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:41:30.906343+00:00",
+      "name": "Synthetic speech transcription",
+      "status": "PASS",
+      "model": "muse-voice-transcribe-1.0",
+      "endpoint": "/asr/transcribe",
+      "format": "mono, 16-bit PCM WAV at 16/24 kHz; multipart /asr/transcribe",
+      "status_code": 200,
+      "duration_ms": 5214,
+      "usage": {},
+      "cost_usd": 0.00020853124999999998,
+      "response_id": null
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:03.448439+00:00",
+      "name": "PDF: deadline_notice_a.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 4822,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 2659
+        },
+        "output_tokens": 147,
+        "output_tokens_details": {
+          "reasoning_tokens": 94
+        },
+        "total_tokens": 2829
+      },
+      "cost_usd": 0.0010523499999999999,
+      "response_id": "resp_6ae1eec723d72bc011a94d26"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:08.480386+00:00",
+      "name": "PDF: deadline_notice_b.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 5026,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 176,
+        "output_tokens_details": {
+          "reasoning_tokens": 116
+        },
+        "total_tokens": 2858
+      },
+      "cost_usd": 0.0041005,
+      "response_id": "resp_6ae1eecc83357fbc25c04a98"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:14.132996+00:00",
+      "name": "PDF: synthetic_admit_card.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 5649,
+      "usage": {
+        "input_tokens": 2690,
+        "input_tokens_details": {
+          "cached_tokens": 2659
+        },
+        "output_tokens": 117,
+        "output_tokens_details": {
+          "reasoning_tokens": 39
+        },
+        "total_tokens": 2807
+      },
+      "cost_usd": 0.0009348499999999999,
+      "response_id": "resp_6ae1eed16afac44bb7754876"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:18.358584+00:00",
+      "name": "Image scene understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 4221,
+      "usage": {
+        "input_tokens": 351,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 339,
+        "output_tokens_details": {
+          "reasoning_tokens": 125
+        },
+        "total_tokens": 690
+      },
+      "cost_usd": 0.0018795,
+      "response_id": "resp_6ae1eed62873137b122848f5"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:22.191164+00:00",
+      "name": "Screenshot text understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 3829,
+      "usage": {
+        "input_tokens": 663,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 114,
+        "output_tokens_details": {
+          "reasoning_tokens": 74
+        },
+        "total_tokens": 777
+      },
+      "cost_usd": 0.00131325,
+      "response_id": "resp_6ae1eed9165fbecb91ee4c3a"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:24.647896+00:00",
+      "name": "Screenshot table extraction",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 2453,
+      "usage": {
+        "input_tokens": 663,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 143,
+        "output_tokens_details": {
+          "reasoning_tokens": 53
+        },
+        "total_tokens": 806
+      },
+      "cost_usd": 0.0014365,
+      "response_id": "resp_6ae1eedc3071dd54582c4c40"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:26.256317+00:00",
+      "name": "Chart reading",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 1604,
+      "usage": {
+        "input_tokens": 668,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 96,
+        "output_tokens_details": {
+          "reasoning_tokens": 49
+        },
+        "total_tokens": 764
+      },
+      "cost_usd": 0.001243,
+      "response_id": "resp_6ae1eede8bc8989108154cfa"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:28.882869+00:00",
+      "name": "Two-image comparison",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "two PNG input_image blocks",
+      "status_code": 200,
+      "duration_ms": 2622,
+      "usage": {
+        "input_tokens": 693,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 239,
+        "output_tokens_details": {
+          "reasoning_tokens": 108
+        },
+        "total_tokens": 932
+      },
+      "cost_usd": 0.001882,
+      "response_id": "resp_6ae1eee017034ec8c8224803"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:31.072733+00:00",
+      "name": "Structured output + Pydantic",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "Responses text.format json_schema; Pydantic validation",
+      "status_code": 200,
+      "duration_ms": 2184,
+      "usage": {
+        "input_tokens": 41,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 101,
+        "output_tokens_details": {
+          "reasoning_tokens": 71
+        },
+        "total_tokens": 142
+      },
+      "cost_usd": 0.0004805,
+      "response_id": "resp_6ae1eee2aa3ac26803364391"
+    },
+    {
+      "timestamp_utc": "2026-10-28T12:47:33.964784+00:00",
+      "name": "Synthetic speech transcription",
+      "status": "PASS",
+      "model": "muse-voice-transcribe-1.0",
+      "endpoint": "/asr/transcribe",
+      "format": "mono, 16-bit PCM WAV at 16/24 kHz; multipart /asr/transcribe",
+      "status_code": 200,
+      "duration_ms": 2886,
+      "usage": {},
+      "cost_usd": 0.00020853124999999998,
+      "response_id": null
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:29.206509+00:00",
+      "name": "PDF: deadline_notice_a.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 4498,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 157,
+        "output_tokens_details": {
+          "reasoning_tokens": 97
+        },
+        "total_tokens": 2839
+      },
+      "cost_usd": 0.00401975,
+      "response_id": "resp_6ae2142547be7181e2f9410f"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:33.628485+00:00",
+      "name": "PDF: deadline_notice_b.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 4422,
+      "usage": {
+        "input_tokens": 2682,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 149,
+        "output_tokens_details": {
+          "reasoning_tokens": 95
+        },
+        "total_tokens": 2831
+      },
+      "cost_usd": 0.00398575,
+      "response_id": "resp_6ae21429a805fb261ee240dd"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:37.885600+00:00",
+      "name": "PDF: synthetic_admit_card.pdf",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "application/pdf inline data URL / input_file",
+      "status_code": 200,
+      "duration_ms": 4254,
+      "usage": {
+        "input_tokens": 2690,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 155,
+        "output_tokens_details": {
+          "reasoning_tokens": 77
+        },
+        "total_tokens": 2845
+      },
+      "cost_usd": 0.00402125,
+      "response_id": "resp_6ae2142d18fa57fdd1674034"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:41.612106+00:00",
+      "name": "Image scene understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 3723,
+      "usage": {
+        "input_tokens": 351,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 419,
+        "output_tokens_details": {
+          "reasoning_tokens": 186
+        },
+        "total_tokens": 770
+      },
+      "cost_usd": 0.0022195,
+      "response_id": "resp_6ae21431774c089631674681"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:43.481026+00:00",
+      "name": "Screenshot text understanding",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 1866,
+      "usage": {
+        "input_tokens": 663,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 83,
+        "output_tokens_details": {
+          "reasoning_tokens": 43
+        },
+        "total_tokens": 746
+      },
+      "cost_usd": 0.0011815,
+      "response_id": "resp_6ae214336cc17c9541af444e"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:45.917154+00:00",
+      "name": "Screenshot table extraction",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 2434,
+      "usage": {
+        "input_tokens": 663,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 166,
+        "output_tokens_details": {
+          "reasoning_tokens": 80
+        },
+        "total_tokens": 829
+      },
+      "cost_usd": 0.00153425,
+      "response_id": "resp_6ae214351b75355876454086"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:47.945872+00:00",
+      "name": "Chart reading",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "PNG inline data URL / input_image",
+      "status_code": 200,
+      "duration_ms": 2026,
+      "usage": {
+        "input_tokens": 668,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 112,
+        "output_tokens_details": {
+          "reasoning_tokens": 64
+        },
+        "total_tokens": 780
+      },
+      "cost_usd": 0.001311,
+      "response_id": "resp_6ae21437b7ddf5c79ee44605"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:49.886594+00:00",
+      "name": "Two-image comparison",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "two PNG input_image blocks",
+      "status_code": 200,
+      "duration_ms": 1936,
+      "usage": {
+        "input_tokens": 693,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 206,
+        "output_tokens_details": {
+          "reasoning_tokens": 89
+        },
+        "total_tokens": 899
+      },
+      "cost_usd": 0.00174175,
+      "response_id": "resp_6ae21439ca10c9acae7744d3"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:51.219872+00:00",
+      "name": "Structured output + Pydantic",
+      "status": "PASS",
+      "model": "muse-spark-1.3",
+      "endpoint": "/responses",
+      "format": "Responses text.format json_schema; Pydantic validation",
+      "status_code": 200,
+      "duration_ms": 1324,
+      "usage": {
+        "input_tokens": 41,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 84,
+        "output_tokens_details": {
+          "reasoning_tokens": 54
+        },
+        "total_tokens": 125
+      },
+      "cost_usd": 0.00040825,
+      "response_id": "resp_6ae2143baf01fa5540c54632"
+    },
+    {
+      "timestamp_utc": "2026-10-28T15:26:54.841874+00:00",
+      "name": "Synthetic speech transcription",
+      "status": "PASS",
+      "model": "muse-voice-transcribe-1.0",
+      "endpoint": "/asr/transcribe",
+      "format": "mono, 16-bit PCM WAV at 16/24 kHz; multipart /asr/transcribe",
+      "status_code": 200,
+      "duration_ms": 3615,
+      "usage": {},
+      "cost_usd": 0.00020853124999999998,
+      "response_id": null
+    }
+  ]
+}

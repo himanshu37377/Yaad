@@ -1,0 +1,33 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.db
+*.sqlite3
+data/
+eval/generated/
+eval/real_eval/data/
+eval/real_eval/results/
+# OS / editor noise
+.DS_Store
+# Python packaging output
+yaad_memory.egg-info/
+*.egg-info/
+# Local design reference, not part of the app
+ui-reference.png
+# Verification/browser captures from UI work, not project documentation
+docs/ui-reference/
+docs/screenshots/
+# Real voice recording: publish only with documented consent (see README).
+# The synthetic companions (proposal PDF, poster PNG, notes TXT) are safe.
+yaad_cross_file_test/*.m4a
+yaad_cross_file_test/*.wav
+yaad_cross_file_test/*.mp3
+eval/real_eval_v2/data/
+eval/real_eval_v2/results/
+eval/real_eval_v3/data/
+eval/real_eval_v3/results/
+eval/image_eval/data/
+eval/image_eval_v2/data/
+eval/image_eval_v2/results/

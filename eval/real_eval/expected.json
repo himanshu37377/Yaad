@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "frozen": true,
+  "note": "Expected answers written before any live run. Do not edit after seeing results; create a dated v2 instead.",
+  "folders": {
+    "lifecycle": "initial_decision.pdf -> revision_poster.png -> proposal_audio.wav -> final_confirmation.txt (+ library_grant.txt distractor)",
+    "conflict": "source_a.txt vs source_b.txt catering amounts, no supersession evidence"
+  },
+  "extraction_expectations": {
+    "lifecycle": [
+      {"kind": "decision", "must_mention": ["Grand Arena"], "statement_kind": "explicit"},
+      {"kind": "any", "must_mention": ["25000"], "statement_kind": "explicit"},
+      {"kind": "deadline", "must_mention": ["2027-04-02"], "statement_kind": "explicit"},
+      {"kind": "any", "must_mention": ["25000"], "statement_kind": "proposal", "from": "audio proposal must not become a confirmed decision"}
+    ],
+    "forbidden_inventions": ["Riverside Hall as current venue", "20000 as current budget", "catering menu"]
+  },
+  "questions": [
+    {"id": "L1", "folder": "lifecycle", "question": "What is the Spring Fest venue?", "expect_status": ["answered"], "must_contain": ["Grand Arena"], "must_not_contain": ["Riverside Hall"], "category": "cross-modal/supersession"},
+    {"id": "L2", "folder": "lifecycle", "question": "What is the Spring Fest budget?", "expect_status": ["answered"], "must_contain": ["25000"], "must_not_contain": ["20000"], "category": "supersession"},
+    {"id": "L3", "folder": "lifecycle", "question": "What is the registration deadline?", "expect_status": ["answered"], "must_contain": ["April 2, 2027"], "must_not_contain": ["March 1, 2027"], "category": "supersession"},
+    {"id": "L4", "folder": "lifecycle", "question": "What changed?", "expect_status": ["answered"], "must_contain": ["Grand Arena"], "category": "temporal ledger"},
+    {"id": "L5", "folder": "lifecycle", "question": "What does the poster photo show?", "expect_status": ["answered"], "must_contain": ["Grand Arena"], "category": "vision"},
+    {"id": "L6", "folder": "lifecycle", "question": "What is on the catering menu?", "expect_status": ["not_found", "unverified"], "must_contain": [], "category": "abstention"},
+    {"id": "C1", "folder": "conflict", "question": "What is the Spring Fest catering cost?", "expect_status": ["conflict"], "must_contain": ["8000", "9500"], "category": "genuine conflict"},
+    {"id": "C2", "folder": "conflict", "question": "Do the sources agree on the catering cost?", "expect_status": ["conflict", "answered"], "must_contain": ["8000", "9500"], "category": "genuine conflict"}
+  ]
+}

@@ -1,0 +1,1 @@
+Benchmark V1 fixture multimodal/mm_schedule_pdf.txt. [file-kind: pdf] Schedule page: the poster session opens at 10am in Seminar Room B. Registration closes 2027-04-09.

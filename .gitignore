@@ -11,6 +11,10 @@ eval/real_eval/data/
 eval/real_eval/results/
 # OS / editor noise
 .DS_Store
+# Agent session state: worktrees hold full repo copies + logs; never publish
+.muse/
+# One-off AI image experiments; unreferenced by code and docs
+generated_images/
 # Python packaging output
 yaad_memory.egg-info/
 *.egg-info/
@@ -18,16 +22,24 @@ yaad_memory.egg-info/
 ui-reference.png
 # Verification/browser captures from UI work, not project documentation
 docs/ui-reference/
-docs/screenshots/
-# Real voice recording: publish only with documented consent (see README).
-# The synthetic companions (proposal PDF, poster PNG, notes TXT) are safe.
-yaad_cross_file_test/*.m4a
-yaad_cross_file_test/*.wav
-yaad_cross_file_test/*.mp3
+# docs/screenshots/ is intentionally COMMITTED: README embeds these images
+# Generated cross-file corpus output (scripts/make_cross_file_fixtures.py):
+# synthetic companions plus any local recordings stay unpublished. The
+# approved synthetic demo voice note lives in sample_files/ (see README).
+yaad_cross_file_test/
 eval/real_eval_v2/data/
 eval/real_eval_v2/results/
 eval/real_eval_v3/data/
 eval/real_eval_v3/results/
+eval/real_eval_hostel/data/
+eval/real_eval_hostel/results/
 eval/image_eval/data/
+eval/image_eval/results/
 eval/image_eval_v2/data/
 eval/image_eval_v2/results/
+# Committed on purpose (frozen evidence, no secrets/absolute paths):
+# eval/benchmark_v1/results*/, eval/suites/results/,
+# eval/adversarial_answers/results_deterministic.json,
+# eval/paraphrase_recall/results_real_weights.json. All other
+# eval/*/data/ and eval/*/results/ content is generated local-only
+# output; regenerate with scripts/make_*_data.py (see eval/README.md).

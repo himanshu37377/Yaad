@@ -1,0 +1,63 @@
+{
+  "frozen": true,
+  "version": 2,
+  "note": "Paraphrase-recall probe v2. Corpus: 22 single-sentence units in one file, including near-miss distractors (three budgets, two venues, two deadlines). Questions were authored keyboard-hostile ON PURPOSE for the paraphrase set (near-zero word overlap with the gold unit), so the keyword arm is expected to fail there by construction -- the probe measures whether the semantic channel closes a constructed lexical gap, not real-world query quality. n is small and the author built both the channel and the probe: read every number as fixture evidence only. Three structured memory records (catering budget, venue, registration deadline) are seeded so the production channel mix is exercised.",
+  "corpus": [
+    {"evidence_id": "sem_u01", "text": "The keynote address begins at nine in the morning."},
+    {"evidence_id": "sem_u02", "text": "Registration closes on the fifteenth of November."},
+    {"evidence_id": "sem_u03", "text": "The catering budget is capped at twelve thousand rupees."},
+    {"evidence_id": "sem_u04", "text": "Volunteers must assemble at the north gate by seven."},
+    {"evidence_id": "sem_u05", "text": "The poster printing deadline is Friday evening."},
+    {"evidence_id": "sem_u06", "text": "Sound equipment rental costs forty-five hundred rupees."},
+    {"evidence_id": "sem_u07", "text": "The morning session covers registration desk setup."},
+    {"evidence_id": "sem_u08", "text": "Food stalls open at noon near the main entrance."},
+    {"evidence_id": "sem_u09", "text": "Autumn Fest will be held at Riverside Hall."},
+    {"evidence_id": "sem_u10", "text": "Autumn Fest has a total budget of twenty-five thousand rupees."},
+    {"evidence_id": "sem_u11", "text": "The hall decoration budget is capped at eight thousand rupees."},
+    {"evidence_id": "sem_u12", "text": "The finance team approved a contingency fund of five thousand rupees."},
+    {"evidence_id": "sem_u13", "text": "Guest parking is available behind the science block."},
+    {"evidence_id": "sem_u14", "text": "The venue changed to Grand Arena for the final day."},
+    {"evidence_id": "sem_u15", "text": "Abstract submissions for the workshop close on the second of November."},
+    {"evidence_id": "sem_u16", "text": "The photography club will cover the inauguration ceremony."},
+    {"evidence_id": "sem_u17", "text": "Lunch coupons are distributed at the registration desk."},
+    {"evidence_id": "sem_u18", "text": "The chief guest arrives at the venue by ten."},
+    {"evidence_id": "sem_u19", "text": "Portable speaker batteries must be charged overnight."},
+    {"evidence_id": "sem_u20", "text": "The treasurer maintains the expense ledger for all purchases."},
+    {"evidence_id": "sem_u21", "text": "First aid kits are stocked at every entrance gate."},
+    {"evidence_id": "sem_u22", "text": "The quiz finals begin after the lunch break."}
+  ],
+  "records": [
+    {"title": "Catering budget", "detail": "The catering budget is capped at twelve thousand rupees",
+     "key_phrase": "catering budget", "record_type": "decision", "status": "decided",
+     "statement_kind": "explicit", "evidence_id": "sem_u03",
+     "excerpt": "catering budget is capped at twelve thousand rupees"},
+    {"title": "Autumn Fest venue", "detail": "Autumn Fest will be held at Riverside Hall",
+     "key_phrase": "autumn fest", "record_type": "decision", "status": "decided",
+     "statement_kind": "explicit", "evidence_id": "sem_u09",
+     "excerpt": "Autumn Fest will be held at Riverside Hall"},
+    {"title": "Registration deadline", "detail": "Registration closes on the fifteenth of November",
+     "key_phrase": "registration closes", "record_type": "deadline", "status": "open",
+     "statement_kind": "explicit", "evidence_id": "sem_u02",
+     "excerpt": "Registration closes on the fifteenth of November",
+     "date_value": "2027-11-15", "date_raw": "fifteenth of November"}
+  ],
+  "cases": [
+    {"id": "p1", "question": "When does the opening speech start?", "gold": "sem_u01", "kind": "paraphrase"},
+    {"id": "p2", "question": "What is the last date to sign up?", "gold": "sem_u02", "kind": "paraphrase"},
+    {"id": "p3", "question": "How much can we spend on food?", "gold": "sem_u03", "kind": "paraphrase"},
+    {"id": "p4", "question": "Where and when should helpers gather?", "gold": "sem_u04", "kind": "paraphrase"},
+    {"id": "p5", "question": "When are the flyers due?", "gold": "sem_u05", "kind": "paraphrase"},
+    {"id": "p6", "question": "What is the price of the audio gear hire?", "gold": "sem_u06", "kind": "paraphrase"},
+    {"id": "p7", "question": "Which location hosts the festival?", "gold": "sem_u09", "kind": "paraphrase"},
+    {"id": "p8", "question": "By when must workshop papers be submitted?", "gold": "sem_u15", "kind": "paraphrase"},
+    {"id": "k1", "question": "What is the registration closing date?", "gold": "sem_u02", "kind": "keyword-control"},
+    {"id": "k2", "question": "catering budget cap", "gold": "sem_u03", "kind": "keyword-control"},
+    {"id": "k3", "question": "Where is Autumn Fest held?", "gold": "sem_u09", "kind": "keyword-control"}
+  ],
+  "hard_negatives": [
+    {"id": "h1", "question": "How much can we spend on food?", "gold": "sem_u03", "forbidden_above_gold": ["sem_u10", "sem_u11", "sem_u12"]},
+    {"id": "h2", "question": "What is the overall festival budget?", "gold": "sem_u10", "forbidden_above_gold": ["sem_u03", "sem_u11"]},
+    {"id": "h3", "question": "Where is the festival venue?", "gold": "sem_u09", "forbidden_above_gold": ["sem_u14"]},
+    {"id": "h4", "question": "When does registration close?", "gold": "sem_u02", "forbidden_above_gold": ["sem_u15"]}
+  ]
+}

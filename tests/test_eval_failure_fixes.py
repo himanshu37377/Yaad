@@ -10,14 +10,14 @@ from yaad.memory.records import apply_supersession_links, mark_conflicts
 def deadline_store(path, supersede):
     store = Store(path)
     store.add_file("a.txt", [("ev_a", "Registration deadline is March 1, 2027 for Spring Fest")])
-    store.add_file("b.txt", [("ev_b", "Registration deadline is April 2, 2027 for Spring Fest")])
+    store.add_file("b.txt", [("ev_b", "Updated registration deadline is April 2, 2027 for Spring Fest")])
     store.add_file("c.txt", [("ev_c", "Registration deadline is March 1, 2027")])
     store.add_records("run-1", [
         candidate("Registration deadline March 2027", "registration deadline",
                   [("ev_a", "Registration deadline is March 1, 2027")],
                   date_value="2027-03-01", date_raw="March 1, 2027"),
         candidate("Registration deadline April 2027", "registration deadline",
-                  [("ev_b", "Registration deadline is April 2, 2027")],
+                  [("ev_b", "Updated registration deadline is April 2, 2027")],
                   date_value="2027-04-02", date_raw="April 2, 2027"),
     ])
     if supersede:

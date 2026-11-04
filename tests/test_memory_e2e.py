@@ -229,14 +229,17 @@ def test_multi_claim_synthesis_keeps_distinct_values_separate(tmp_path):
     store.add_file("budget.txt", [("ev_a", "Contingency budget amount Rs 2500 approved",
                                       '{"type":"text_span","section":"contingency"}'),
                                   ("ev_b", "Total budget approved is Rs 25000",
-                                   '{"type":"text_span","section":"total"}')])
+                                   '{"type":"text_span","section":"total"}'),
+                                  ("ev_c", "Total budget approved is Rs 25000",
+                                   '{"type":"text_span","section":"total-confirmation"}')])
     store.add_records("run-1", [
         candidate("Contingency budget", "contingency budget amount",
-                  [("ev_a", "Contingency budget amount Rs 2500")],
+                  [("ev_a", "Contingency budget amount Rs 2500"),
+                   ("ev_b", "Total budget approved is Rs 25000")],
                   detail="Contingency budget amount Rs 2500, total Rs 25000",
                   record_type="decision", status="decided", date_value=None, date_raw=None),
         candidate("Total budget", "total budget approved",
-                  [("ev_b", "Total budget approved is Rs 25000")],
+                  [("ev_c", "Total budget approved is Rs 25000")],
                   detail="Total budget approved is Rs 25000",
                   record_type="decision", status="decided", date_value=None, date_raw=None),
     ])

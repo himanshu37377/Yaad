@@ -1,0 +1,1 @@
+Benchmark V1 fixture multimodal/mm_poster_pdf.txt. [file-kind: pdf] Spring Fest poster visible text: food stalls at the Grand Arena annex. The headline act starts at 7pm.

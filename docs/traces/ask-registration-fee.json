@@ -23,7 +23,7 @@
   "evidence": [
     {
       "id": "ev_4e16da8e9c3b",
-      "file": "/private/tmp/traces/corpus/event_proposal.pdf",
+      "file": "<project-root>/sample_files/event_proposal.pdf",
       "locator": {
         "type": "pdf_page",
         "page": 1,
@@ -38,7 +38,7 @@
     },
     {
       "id": "ev_83fb6c6c2f97",
-      "file": "/private/tmp/traces/corpus/organizer_notes.txt",
+      "file": "<project-root>/sample_files/organizer_notes.txt",
       "locator": {
         "type": "text_span",
         "section": "organizer_notes",
@@ -54,11 +54,11 @@
   ],
   "candidates": [
     {
-      "file": "/private/tmp/traces/corpus/event_proposal.pdf",
+      "file": "<project-root>/sample_files/event_proposal.pdf",
       "partial": false
     },
     {
-      "file": "/private/tmp/traces/corpus/organizer_notes.txt",
+      "file": "<project-root>/sample_files/organizer_notes.txt",
       "partial": false
     }
   ],

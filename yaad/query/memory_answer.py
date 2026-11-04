@@ -19,6 +19,9 @@ from yaad.memory.records import (
     claims_match,
     conflict_partners,
     normalize_text,
+    states_dispute,
+    statement_amounts,
+    statement_dates,
 )
 from yaad.memory.relationships import (
     DIMENSION_LABELS,
@@ -46,6 +49,63 @@ MATCH_WORDS = 2
 # and attribution only, and must never change the verdict.
 ANSWERABLE = "answerable"
 CONTEXTUAL = "contextual"
+
+# Slot synonyms (shared seam): tiny reviewed equivalence classes for
+# memory overlap counting. SLOT_SYNONYMS maps a variant to its
+# canonical slot; canonical_term is the total lookup. Both are
+# import-safe (pure constants/functions, no side effects) for other
+# modules to reuse. Four classes, deliberately narrow:
+# - fee: words for a charged amount (cost/price/charge);
+# - registration: words for signing up / attending;
+# - venue: words for where an event happens;
+# - deadline: words for when something is due.
+# Explicit non-members: "free" (must never match "fee"), money
+# matters that are not fees ("budget", "amount", "payment",
+# "deposit"), and idiomatic "place" ("took place").
+SLOT_SYNONYMS = {
+    "cost": "fee", "costs": "fee", "price": "fee", "prices": "fee",
+    "charge": "fee", "charges": "fee", "fees": "fee",
+    "attend": "registration", "attends": "registration",
+    "attended": "registration", "attending": "registration",
+    "attendance": "registration", "attendee": "registration",
+    "attendees": "registration", "admission": "registration",
+    "admissions": "registration",
+    "room": "venue", "rooms": "venue", "hall": "venue", "halls": "venue",
+    "location": "venue", "locations": "venue",
+    "date": "deadline", "dates": "deadline", "due": "deadline",
+}
+
+
+def canonical_term(word: str) -> str:
+    """Canonical slot for one word: its SLOT_SYNONYMS class, else itself."""
+    folded = (word or "").casefold()
+    if folded == "free":
+        # Hard negative: "free" must never conflate with "fee", however
+        # the map evolves.
+        return "free"
+    return SLOT_SYNONYMS.get(folded, folded)
+
+
+def _canonical_terms(terms: set[str]) -> set[str]:
+    """Project terms onto equivalence classes for overlap counting: each
+    class counts once, so 'cost' meets 'fee' and 'due' meets
+    'deadline'. Hyphenated compounds ('cost-to-attend') contribute
+    their content parts alongside the whole token, so previously
+    matching pairs still match."""
+    out = set()
+    for term in terms:
+        folded = (term or "").casefold()
+        out.add(canonical_term(folded))
+        if "-" in folded:
+            for part in folded.split("-"):
+                if len(part) > 1 and part not in STOPWORDS:
+                    out.add(canonical_term(part))
+    return out
+
+
+def _canonical_overlap(left: set[str], right: set[str]) -> set[str]:
+    """Shared equivalence classes between two term sets."""
+    return _canonical_terms(left) & _canonical_terms(right)
 
 
 def content_terms(text: str) -> set[str]:
@@ -105,8 +165,9 @@ def _record_text(record: dict) -> str:
 def _matches_terms(record: dict, terms: set[str]) -> bool:
     """Question relevance: shared wording at the retrieval floor. Shared
     evidence corroborates but does not match, else every record citing a
-    retrieved unit would answer every question."""
-    return len(terms & content_terms(_record_text(record))) >= MATCH_WORDS
+    retrieved unit would answer every question. Overlap counts synonym
+    equivalence classes (SLOT_SYNONYMS), so paraphrases meet."""
+    return len(_canonical_overlap(terms, content_terms(_record_text(record)))) >= MATCH_WORDS
 
 
 def matter_words(record: dict) -> set[str]:
@@ -173,15 +234,22 @@ def _relevance_for(record: dict, terms: set[str], undecided_match: bool) -> dict
     Slot gate: for a slot-specific question (amount/date), a record
     that does not carry that slot can never be Tier A, however well
     its event wording matches — a venue record must not answer a
-    budget question. It demotes to Tier C context instead."""
-    matter = sorted(matter_words(record) & terms)
+    budget question. It demotes to Tier C context instead.
+
+    Both overlaps count synonym equivalence classes
+    (SLOT_SYNONYMS), so a paraphrased question ('cost to attend')
+    still meets its record ('registration fee'); matter_overlap keeps
+    the record's own words."""
+    canon_terms = _canonical_terms(terms)
+    matter = sorted(word for word in matter_words(record)
+                    if _canonical_terms({word}) & canon_terms)
     tier = ANSWERABLE if (undecided_match or matter) else CONTEXTUAL
     slot = _question_slot(terms)
     slot_carried = _carries_slot(record, slot) if slot else True
     if tier == ANSWERABLE and slot and not slot_carried and not undecided_match:
         tier = CONTEXTUAL
     return {"tier": tier,
-            "shared": len(terms & content_terms(_record_text(record))),
+            "shared": len(_canonical_overlap(terms, content_terms(_record_text(record)))),
             "matter_overlap": matter}
 
 
@@ -260,7 +328,7 @@ def _claim_from_group(group: list[dict], supports: dict[int, list[dict]],
             "date_value": first["date_value"], "date_raw": first["date_raw"],
             "statement": (first.get("detail") or first["title"]).strip(),
             "evidence_ids": evidence_ids,
-            "shared": len(terms & content_terms(_record_text(first))),
+            "shared": len(_canonical_overlap(terms, content_terms(_record_text(first)))),
             "overlap": bool(retrieved & set(evidence_ids))}
 
 
@@ -311,6 +379,13 @@ def detect_status_intent(question: str) -> list[str]:
         return []
     words = set(re.findall(r"[\w-]+", asked))
     explicit_memory = bool(words & {"memory", "memories", "record", "records"})
+    # A value-seeking question ("What is proposal fee?") is factual even
+    # when a status word appears without a determiner: never divert it
+    # into a status listing unless memory scope is explicit.
+    if not explicit_memory and words & {
+            "fee", "fees", "amount", "cost", "price", "payment", "deadline",
+            "due", "date", "when"}:
+        return []
     return [name for name, terms in STATUS_INTENTS
             if any(_term_counts(asked, term, explicit_memory) for term in terms)]
 
@@ -489,20 +564,6 @@ def _status_plan(db, folder_id: int | None, intents: list[str], local: bool = Fa
     return plan
 
 
-def plan_memory(db, question: str, folder_id: int | None, rows, local: bool = False) -> dict:
-    """Match eligible, authorized records to the question.
-
-    Returns deduped claims, explicit conflict pairs, and support rows for
-    injection. Empty claims/conflicts means the units pipeline runs alone.
-    Status-intent questions take a separate listing path keyed off stored
-    status, never wording thresholds. Local serving authorizes resolving
-    supports without cloud consent (see authorized_supports).
-    """
-    intents = detect_status_intent(question)
-    if intents:
-        return _status_plan(db, folder_id, intents, local=local)
-    if detect_changes_intent(question):
-        return _changes_plan(db, folder_id, local=local)
 def match_memory_records(con, folder_id: int | None, terms: set[str],
                          undecided_question: bool, local: bool = False
                          ) -> tuple[list[dict], list[dict], dict[int, list[dict]]]:
@@ -585,6 +646,19 @@ def _conflict_value_entry(first_id: int, second_id: int, validation: dict,
     return entry
 
 
+def _dispute_value_entry(record_id: int, claim: dict) -> dict:
+    """Internal display summary for a single-side dispute: the
+    statement's own rival values. Internal only (never serialized
+    into the contract), mirroring _conflict_value_entry."""
+    amounts = statement_amounts(claim.get("statement") or "")
+    if len(amounts) >= 2:
+        return {"record_ids": [record_id], "label": "amounts",
+                "values": {record_id: " vs ".join(amounts[:2])}}
+    dates = sorted(statement_dates(claim.get("statement") or ""))
+    return {"record_ids": [record_id], "label": "dates",
+            "values": {record_id: " vs ".join(dates[:2])}}
+
+
 def _promote_validated_rivals(con, plan: dict, matched: list[dict]) -> None:
     """Move validated rival pairs out of Tier A claims into conflicts.
 
@@ -662,6 +736,18 @@ def plan_memory(db, question: str, folder_id: int | None, rows, local: bool = Fa
                         if partner["id"] in usable and partner["id"] != record["id"]
                         and _matches_terms(partner, terms)]
             if not partners:
+                # Single-side dispute: a conflicted record whose own
+                # statement describes the dispute needs no partner.
+                # Non-dispute partnerless records keep the fail-closed
+                # drop below.
+                if states_dispute(record.get("title"), record.get("detail")):
+                    claim = _claim_from_group([record], usable, terms, retrieved)
+                    plan["conflicts"].append([claim])
+                    plan["conflict_validations"].append(
+                        {"record_ids": [record["id"]], "verdict": SUPPORTED,
+                         "reasons": ["self-contained dispute description"]})
+                    plan["conflict_values"].append(_dispute_value_entry(
+                        record["id"], claim))
                 continue
             for partner in partners:
                 pair = tuple(sorted((record["id"], partner["id"])))
@@ -911,11 +997,17 @@ def unvalidated_amount_rivalry(claims: list[dict]) -> tuple[dict, dict] | None:
     return None
 
 
-def _conflict_answer(plan: dict, first: dict, second: dict, rows_by_id: dict) -> str:
+def _conflict_answer(plan: dict, first: dict, second: dict | None = None,
+                     rows_by_id: dict | None = None) -> str:
     """Conflict text naming both rival values with their files. Falls
     back to the legacy statement join when no displayable values were
     captured (hand-built plans, or values neither side states in
     retrievable words). Never explains, dates, or ranks the sides."""
+    if second is None:
+        # Single-side dispute: the record's own statement already
+        # describes both sides, served verbatim.
+        return first["statement"]
+    rows_by_id = rows_by_id or {}
     for entry in plan.get("conflict_values", []):
         if set(entry.get("record_ids", [])) != set(first["record_ids"]) | set(second["record_ids"]):
             continue
@@ -967,11 +1059,21 @@ def synthesize(question: str, plan: dict, support_rows: list[dict]) -> dict | No
     rows_by_id = {row["evidence_id"]: row for row in support_rows}
     values: list[dict] = []
     if conflicts:
-        first, second = conflicts[0]
-        evidence_ids = list(dict.fromkeys(first["evidence_ids"] + second["evidence_ids"]))
-        values = _claim_values(question, first) + _claim_values(question, second)
-        status = "conflict"
-        answer = _conflict_answer(plan, first, second, rows_by_id)
+        if len(conflicts[0]) == 1:
+            # Single-side dispute: the record's own statement is the
+            # conflict text; cards, prefix, and truncation below are
+            # shared with the pair path.
+            only = conflicts[0][0]
+            evidence_ids = list(only["evidence_ids"])
+            values = _claim_values(question, only)
+            status = "conflict"
+            answer = _conflict_answer(plan, only)
+        else:
+            first, second = conflicts[0]
+            evidence_ids = list(dict.fromkeys(first["evidence_ids"] + second["evidence_ids"]))
+            values = _claim_values(question, first) + _claim_values(question, second)
+            status = "conflict"
+            answer = _conflict_answer(plan, first, second, rows_by_id)
     else:
         rival = _unvalidated_rivalry(claims)
         amount_rival = None if rival is not None else unvalidated_amount_rivalry(claims)
@@ -1019,6 +1121,12 @@ def synthesize(question: str, plan: dict, support_rows: list[dict]) -> dict | No
     cards = evidence_cards(plan, support_rows, evidence_ids)
     if not cards:
         return None
+    if all(str(card.get("file") or "").startswith("yaad-conversation://")
+           for card in cards):
+        # Every premise is the user's own earlier statement (the
+        # conversation scheme marks it structurally): serve it as
+        # what it is, never dressed as document-verified fact.
+        answer = "Based on what you told me: " + answer
     if len(answer) > 1200:
         answer = answer[:1200].rsplit(" ", 1)[0] + "…"
     return {"status": status, "answer": answer, "answer_sensitive": is_sensitive(answer, cards[0]["file"]),

@@ -53,7 +53,9 @@ def photo_value_intent(question: str) -> bool:
     metadata stay listing-only. Ambiguous phrasing defaults to the
     shared path: never silently discard a substantive question."""
     q = question.casefold()
-    if any(term in q for term in _VALUE_TERMS):
+    # Word-boundary matching: substring "date" fired inside
+    # "candidate"/"update"/"validate" and misrouted pure browsing.
+    if any(re.search(rf"\b{re.escape(term)}\b", q) for term in _VALUE_TERMS):
         return True
     stripped = _POLITE_PREFIX.sub("", q).strip()
     tokens = _question_tokens(stripped)
@@ -83,7 +85,12 @@ def _meta_only(question: str) -> bool:
 
 
 def location_intent(question: str) -> bool:
-    return any(word in question.casefold() for word in ("where", "location", "from ", "near ", "in "))
+    # Whole-word place cues only: substring matching fired on any
+    # "in " ("Show photos in 2024") and surfaced unrelated scenery.
+    q = question.casefold()
+    if re.search(r"\b(where|location|located)\b", q):
+        return True
+    return bool(re.search(r"\b(from|near|in)\s+(?:the\s+)?[a-z]{3,}", q))
 
 
 def _photo_record(row):
@@ -96,9 +103,18 @@ def _photo_record(row):
             "visible_text": row["visible_text"], "visual_attributes": json.loads(row["visual_attributes"] or "[]"),
             "uncertainties": json.loads(row["uncertainties"] or "[]"),
         }
+    exif = json.loads(row["exif"] or "{}")
+    # Responses carry coarsened coordinates (~1 km); precise GPS stays
+    # in the local DB/photo_meta only and is never served verbatim.
+    for key in ("GPSLatitudeDecimal", "GPSLongitudeDecimal"):
+        if key in exif:
+            try:
+                exif[key] = f"{round(float(exif[key]), 2):.2f}"
+            except (TypeError, ValueError):
+                exif.pop(key, None)
     return {"file_id": row["file_id"], "file": row["path"], "folder": row["folder_path"], "filename": Path(row["path"]).name,
             "evidence_id": row["evidence_id"], "quote": row["text"] or (description or {}).get("caption", ""),
-            "description": description, "exif": json.loads(row["exif"] or "{}"),
+            "description": description, "exif": exif,
             "preview_url": f"/api/photos/{row['file_id']}/preview"}
 
 
@@ -122,6 +138,33 @@ def list_photos(db, folder_id: int | None = None):
     sql += " ORDER BY f.path"
     with db.connect() as con:
         return [_with_location_confidence(_photo_record(row)) for row in con.execute(sql, args)]
+
+
+def annotate_with_compare(photos: list[dict], advisory: dict) -> list[dict]:
+    """Return copies of `photos` with a joint image-compare advisory
+    attached to both cited sides (matched by evidence id).
+
+    The advisory is display-only: conflicts are still served with both
+    sources cited, and this never filters, reorders, or rewrites photo
+    results. Non-matching photos are returned unchanged (copied)."""
+    if not isinstance(advisory, dict) or advisory.get("status") != "compared":
+        return [dict(photo) for photo in photos]
+    cited = set(advisory.get("evidence_ids") or [])
+    note = {"same_subject": advisory.get("same_subject"),
+            "differences": list(advisory.get("differences") or []),
+            "uncertainties": list(advisory.get("annotated_uncertainty")
+                                  if advisory.get("annotated_uncertainty") is not None
+                                  else (advisory.get("uncertainties") or [])),
+            "advisory": True}
+    annotated = []
+    for photo in photos:
+        copy = dict(photo)
+        if photo.get("evidence_id") in cited:
+            copy["image_compare"] = dict(note)
+            copy["image_compare"]["differences"] = list(note["differences"])
+            copy["image_compare"]["uncertainties"] = list(note["uncertainties"])
+        annotated.append(copy)
+    return annotated
 
 
 def _question_hits(photo: dict, question: str) -> int:

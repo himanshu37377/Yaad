@@ -1,0 +1,197 @@
+{
+  "arms": {
+    "model": {
+      "total": 72,
+      "passed": 18,
+      "accuracy": 0.25,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 2
+        },
+        "injection": {
+          "n": 6,
+          "passed": 0
+        },
+        "missing_evidence": {
+          "n": 8,
+          "passed": 8
+        },
+        "multi_doc": {
+          "n": 8,
+          "passed": 8
+        },
+        "multimodal": {
+          "n": 12,
+          "passed": 0
+        },
+        "near_dup": {
+          "n": 8,
+          "passed": 0
+        },
+        "paraphrase": {
+          "n": 10,
+          "passed": 0
+        },
+        "temporal": {
+          "n": 10,
+          "passed": 0
+        }
+      },
+      "failures": [
+        "C01",
+        "C02",
+        "C04",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C10",
+        "J01",
+        "J02",
+        "J03",
+        "J04",
+        "J05",
+        "J06",
+        "V01",
+        "V02",
+        "V03",
+        "V04",
+        "V05",
+        "V06",
+        "V07",
+        "V08",
+        "V09",
+        "V10",
+        "V11",
+        "V12",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09",
+        "P10",
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10"
+      ],
+      "retrieval": {
+        "recall_at_1": 0.8467741935483871,
+        "recall_at_1_n": 62,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 62,
+        "mrr": 0.9919354838709677,
+        "mrr_n": 62,
+        "hard_negative_pass": 1.0,
+        "hard_negative_pass_n": 62
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 0.9444444444444444,
+      "citation_complete_n": 18,
+      "abstention_rate": 1.0,
+      "abstention_n": 8
+    },
+    "production": {
+      "total": 72,
+      "passed": 62,
+      "accuracy": 0.8611111111111112,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 5
+        },
+        "injection": {
+          "n": 6,
+          "passed": 5
+        },
+        "missing_evidence": {
+          "n": 8,
+          "passed": 8
+        },
+        "multi_doc": {
+          "n": 8,
+          "passed": 7
+        },
+        "multimodal": {
+          "n": 12,
+          "passed": 12
+        },
+        "near_dup": {
+          "n": 8,
+          "passed": 5
+        },
+        "paraphrase": {
+          "n": 10,
+          "passed": 10
+        },
+        "temporal": {
+          "n": 10,
+          "passed": 10
+        }
+      },
+      "failures": [
+        "C01",
+        "C02",
+        "C07",
+        "C08",
+        "C09",
+        "J06",
+        "M03",
+        "N01",
+        "N02",
+        "N08"
+      ],
+      "retrieval": {
+        "recall_at_1": 0.8467741935483871,
+        "recall_at_1_n": 62,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 62,
+        "mrr": 0.9919354838709677,
+        "mrr_n": 62,
+        "hard_negative_pass": 1.0,
+        "hard_negative_pass_n": 62
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 0.9444444444444444,
+      "citation_complete_n": 18,
+      "abstention_rate": 1.0,
+      "abstention_n": 8
+    }
+  },
+  "false_supported_rate": {
+    "model": 0.0,
+    "production": 0.0
+  },
+  "meta": {
+    "benchmark": "v1",
+    "frozen": true,
+    "freeze_hash": "5583a64ca3261d670d2a3a0def4dd142fb8630aad42c4266d0b32ec2706048e5",
+    "cases": 72,
+    "offline": false,
+    "model": "muse-spark-1.3",
+    "max_spend_usd": 4.0,
+    "spent_usd": 0.302395,
+    "stopped": {}
+  }
+}

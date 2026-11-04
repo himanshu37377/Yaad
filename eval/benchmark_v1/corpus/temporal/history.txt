@@ -1,0 +1,1 @@
+Benchmark V1 fixture temporal/history.txt. The original Spring Fest plan set Riverside Hall as the venue, a budget of Rs 20,000, and registration closing 2027-03-01.

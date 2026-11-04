@@ -1,0 +1,1 @@
+Benchmark V1 fixture multimodal/mm_gallery_image.txt. [file-kind: image] Caption: a bicycle rally passes Riverside Hall. Visible text reads RIDE 2027.

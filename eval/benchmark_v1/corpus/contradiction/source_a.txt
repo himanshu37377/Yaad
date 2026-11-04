@@ -1,0 +1,1 @@
+Benchmark V1 fixture contradiction/source_a.txt. The caterer quotes Rs 8,000 for Spring Fest catering. Venue hire is Rs 18,000. Registration closes 2027-04-09.

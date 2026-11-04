@@ -17,14 +17,30 @@ from yaad.memory.ledger import (
     supports_snapshot,
 )
 from yaad.memory.relationships import (
+    CURRENCY_TOKENS,
+    DIMENSIONS,
     DIMENSION_LABELS,
+    MONTHS,
+    REVISION_TOKENS,
     SUPPORTED,
+    WEEKDAYS,
+    corroborated_markers,
+    statement_dimension_values,
     statement_dimensions,
     statement_words,
     subject_markers,
     validate_relationship,
 )
-from yaad.query.retrieve import STOPWORDS
+
+# Editorial and calendar vocabulary asserts an editorial position or a
+# date, never an entity (the same exclusion the subject-marker layer
+# uses): a statement may open with "Revised ..."/"Updated ..." without
+# those words counting as ungrounded names. Statement-mode words
+# (proposed/confirmed/approved/decided) describe the record's stance,
+# likewise never an entity.
+_EDITORIAL_TOKENS = (REVISION_TOKENS | MONTHS | WEEKDAYS | CURRENCY_TOKENS
+                     | {"proposed", "proposal", "confirmed", "approved", "decided"})
+from yaad.query.retrieve import STOPWORDS, fold_term
 
 MEMORY_SCHEMA = """
 CREATE TABLE IF NOT EXISTS memory_records(
@@ -45,6 +61,10 @@ CREATE TABLE IF NOT EXISTS memory_records(
   record_key TEXT NOT NULL,
   extraction_run TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  origin TEXT NOT NULL DEFAULT 'document'
+    CHECK(origin IN ('document','conversation','model')),
+  event_time TEXT,
+  effective_time TEXT,
   UNIQUE(folder_id, record_key)
 );
 CREATE TABLE IF NOT EXISTS memory_record_evidence(
@@ -61,6 +81,7 @@ CREATE TABLE IF NOT EXISTS record_flags(
   reason TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX IF NOT EXISTS idx_mre_record ON memory_record_evidence(record_id);
 """
 
 RECORD_TYPES = frozenset({"decision", "deadline", "commitment", "open_question"})
@@ -75,11 +96,11 @@ RESTORED_STATUS = {"decision": "decided", "deadline": "open",
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 AMOUNT_PATTERN = re.compile(
-    r"(?:INR|USD|EUR|\$|₹|Rs\.?|rupees?)\s*\d[\d,]*(?:\.\d{1,2})?"
-    r"|\d[\d,]*(?:\.\d{1,2})?\s*(?:INR|USD|EUR|\$|₹|Rs\.?|rupees?)", re.I)
+    r"(?:INR|USD|EUR|GBP|\$|₹|€|£|Rs\.?|rupees?)\s*\d[\d,]*(?:\.\d+)?"
+    r"|\d[\d,]*(?:\.\d+)?\s*(?:INR|USD|EUR|GBP|\$|₹|€|£|Rs\.?|rupees?)", re.I)
 
-_CURRENCY_ALIASES = (("₹", "INR"), ("$", "USD"), ("€", "EUR"),
-                     ("USD", "USD"), ("EUR", "EUR"), ("INR", "INR"),
+_CURRENCY_ALIASES = (("₹", "INR"), ("$", "USD"), ("€", "EUR"), ("£", "GBP"),
+                     ("USD", "USD"), ("EUR", "EUR"), ("INR", "INR"), ("GBP", "GBP"),
                      ("Rs", "INR"), ("Rs.", "INR"), ("rupees", "INR"), ("rupee", "INR"))
 
 
@@ -102,6 +123,13 @@ def normalize_amount(raw: str) -> str | None:
     value = number.group(0).replace(",", "")
     if "." in value:
         value = value.rstrip("0").rstrip(".")
+    # Fold leading zeros so "0100" and "100" are the same money (the
+    # grounding layer already folds via int(); keep one canonical form).
+    if "." in value:
+        head, _, tail = value.partition(".")
+        value = f"{head.lstrip('0') or '0'}.{tail}"
+    else:
+        value = value.lstrip("0") or "0"
     return f"{currency}{value}"
 
 
@@ -125,6 +153,64 @@ def amount_class_of(excerpts: list[str]) -> tuple[str, str | None]:
     if len(found) > 1:
         return "multi", None
     return "noamount", None
+
+
+DISPUTE_MARKERS = frozenset({"disagree", "disagrees", "disagreed", "disagreeing",
+    "disagreement", "disputed", "dispute", "disputes", "conflict", "conflicts",
+    "conflicting", "contradict", "contradicts", "contradictory", "differs", "differ"})
+
+_DATE_SPAN = re.compile(
+    r"\b\d{4}-\d{2}-\d{2}\b"
+    r"|\b\d{1,2}/\d{1,2}/\d{2,4}\b"
+    r"|\b(?:January|February|March|April|May|June|July|August|September|"
+    r"October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|"
+    r"Nov|Dec)\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s*\d{4})?\b"
+    r"|\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|"
+    r"September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|"
+    r"Sept|Oct|Nov|Dec)\.?(?:\s+\d{4})?\b", re.I)
+
+
+def statement_amounts(text: str) -> list[str]:
+    """Distinct normalized-amount display strings in occurrence order."""
+    found: dict[str, str] = {}
+    for match in AMOUNT_PATTERN.finditer(text or ""):
+        normalized = normalize_amount(match.group(0))
+        if normalized is not None and normalized not in found:
+            found[normalized] = match.group(0).strip()
+    return list(found.values())
+
+
+def statement_dates(text: str) -> set[str]:
+    """Distinct parseable dates (ISO) asserted by a statement."""
+    found = set()
+    for match in _DATE_SPAN.finditer(text or ""):
+        parsed = _parse_raw_date(match.group(0))
+        if parsed is not None:
+            found.add(parsed)
+    return found
+
+
+def states_dispute(title, detail) -> bool:
+    """True when a statement describes a dispute: dispute lexicon AND
+    rival values (>=2 distinct normalized amounts or >=2 distinct
+    parseable dates). Multi-value records without the lexicon (line
+    item + total, room lists, contrastive mentions) are not disputes;
+    negated markers ("no dispute") do not count. Pure, deterministic."""
+    text = f"{title or ''} {detail or ''}"
+    words = re.findall(r"[\w-]+", text.casefold())
+    marked = False
+    for pos, word in enumerate(words):
+        if word not in DISPUTE_MARKERS:
+            continue
+        if pos and words[pos - 1] in ("no", "without"):
+            continue
+        marked = True
+        break
+    if not marked:
+        return False
+    if len(statement_amounts(text)) >= 2:
+        return True
+    return len(statement_dates(text)) >= 2
 
 
 def normalize_text(value: str) -> str:
@@ -177,6 +263,55 @@ def _valid_iso_date(value: str | None) -> bool:
     except ValueError:
         return False
     return True
+
+
+_ORDINALS = ("first", "second", "third", "fourth", "fifth", "sixth", "seventh",
+             "eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth",
+             "fourteenth", "fifteenth", "sixteenth", "seventeenth",
+             "eighteenth", "nineteenth", "twentieth")
+_WORD_NUMBERS = {word: index + 1 for index, word in enumerate(_ORDINALS)}
+_WORD_NUMBERS.update({
+    "twenty-first": 21, "twenty-second": 22, "twenty-third": 23,
+    "twenty-fourth": 24, "twenty-fifth": 25, "twenty-sixth": 26,
+    "twenty-seventh": 27, "twenty-eighth": 28, "twenty-ninth": 29,
+    "thirtieth": 30, "thirty-first": 31,
+})
+
+
+def grounding_numbers(text: str) -> set[str]:
+    """Canonical numeric values asserted by a text: digit runs
+    (thousands separators ignored, leading zeros folded) plus
+    spelled-out ordinals up to thirty-first, so "the fifteenth of
+    November" grounds a statement's "15". Cardinals stay out: prose
+    uses "one"/"two" as ordinary words, while dates -- where spelled
+    forms dominate -- are ordinal. Shared by candidate validation and
+    answer-claim grounding."""
+    found = set()
+    for digits in re.findall(r"\d+", (text or "").replace(",", "")):
+        found.add(str(int(digits)))
+    for word in re.findall(r"[a-z]+(?:-[a-z]+)?", (text or "").casefold()):
+        if word in _WORD_NUMBERS:
+            found.add(str(_WORD_NUMBERS[word]))
+    return found
+
+
+_RAW_DATE_FORMATS = ("%B %d %Y", "%b %d %Y", "%d %B %Y", "%d %b %Y",
+                     "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y")
+
+
+def _parse_raw_date(raw: str) -> str | None:
+    """ISO form of an exact-phrasing date, or None when the phrasing is
+    not a complete parseable date ("next Friday", "March 2027"): no
+    opinion is not a disagreement."""
+    cleaned = re.sub(r"(\d)(st|nd|rd|th)\b", r"\1",
+                     (raw or "").strip().rstrip(",").replace(",", ""))
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    for fmt in _RAW_DATE_FORMATS:
+        try:
+            return datetime.datetime.strptime(cleaned, fmt).date().isoformat()
+        except ValueError:
+            continue
+    return None
 
 
 def validate_candidate(candidate: dict, unit_text_by_evidence_id: dict[str, str]) -> list[str]:
@@ -234,6 +369,52 @@ def validate_candidate(candidate: dict, unit_text_by_evidence_id: dict[str, str]
     date_raw = str(candidate.get("date_raw") or "")
     if date_raw and normalize_text(date_raw) not in pool_norm:
         errors.append("date_raw not in excerpts")
+    # Claim grounding: what a hallucination would invent must be
+    # traceable to the cited evidence. Proper nouns and numbers in the
+    # statement, the assignee, and the normalized date are checked
+    # against the full text of the units the record cites (its
+    # evidence; the excerpt-level checks above keep quote fidelity).
+    # Paraphrased common words are not checked (a faithful restatement
+    # may rename verbs, it may not invent people, places, or values).
+    # Amounts need no check here: amount_value is computed from these
+    # same excerpts, never model-supplied.
+    statement = f"{candidate.get('title') or ''} {candidate.get('detail') or ''}"
+    cited_units = " ".join(unit_text_by_evidence_id[item.get("evidence_id")]
+                           for item in evidence
+                           if item.get("evidence_id") in unit_text_by_evidence_id)
+    pool_tokens = set(re.findall(r"[\w-]+", cited_units.casefold(), flags=re.UNICODE))
+    # Proper-noun grounding applies to sentence-like details: that is
+    # where prose can invent an entity ("Arjun is responsible for
+    # booking the projector"). Label-length statements and titles
+    # ("Volunteer headcount", "Venue Riverside") assert through their
+    # slots instead, so their names are not containment-checked; the
+    # number, assignee, and date checks below cover titles fully.
+    # Morphology is folded on both sides ("Volunteer" ~ "volunteers").
+    folded_pool = {fold_term(word) for word in pool_tokens}
+    detail_tokens = re.findall(r"[\w-]+", str(candidate.get("detail") or ""),
+                               flags=re.UNICODE)
+    if len(detail_tokens) >= 4:
+        for token in dict.fromkeys(detail_tokens):
+            if len(token) > 1 and token[0].isupper() \
+                    and token.casefold() not in STOPWORDS \
+                    and token.casefold() not in _EDITORIAL_TOKENS \
+                    and fold_term(token) not in folded_pool:
+                errors.append(f"ungrounded name in statement: {token!r}")
+    pool_numbers = grounding_numbers(cited_units)
+    if candidate.get("date_value"):
+        pool_numbers |= grounding_numbers(str(candidate["date_value"]))
+    for number in sorted(grounding_numbers(statement) - pool_numbers):
+        errors.append(f"ungrounded number in statement: {number!r}")
+    assignee = str(candidate.get("assignee") or "").strip()
+    if assignee and any(word not in pool_tokens for word in content_words(assignee)):
+        errors.append(f"assignee not in excerpts: {assignee!r}")
+    if candidate.get("date_value") and date_raw:
+        parsed = _parse_raw_date(date_raw)
+        if parsed is not None and parsed != candidate["date_value"]:
+            errors.append(f"date_value {candidate['date_value']} disagrees with "
+                          f"date_raw {date_raw!r}")
+    if states_dispute(candidate.get("title"), candidate.get("detail")):
+        errors.append("dispute summary: emit one record per rival side")
     return errors
 
 
@@ -282,15 +463,21 @@ def upsert_records(con, folder_id: int, run_id: str, candidates: list[dict],
         row = con.execute("SELECT * FROM memory_records WHERE folder_id=? AND record_key=?",
                           (folder_id, key)).fetchone()
         if row is None:
+            origin = candidate.get("origin") or (
+                "conversation" if str(run_id).startswith("conversation") else "document")
+            if origin not in ("document", "conversation", "model"):
+                origin = "document"
             cursor = con.execute(
                 """INSERT INTO memory_records(folder_id,record_type,title,detail,date_value,date_raw,
-                   amount_value,amount_raw,assignee,status,statement_kind,record_key,extraction_run)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   amount_value,amount_raw,assignee,status,statement_kind,record_key,extraction_run,
+                   origin,event_time,effective_time)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (folder_id, candidate["record_type"], candidate["title"], candidate.get("detail", ""),
                  candidate.get("date_value"), candidate.get("date_raw"),
                  candidate.get("amount_value"), candidate.get("amount_raw"),
                  candidate.get("assignee") or None,
-                 candidate["status"], candidate["statement_kind"], key, run_id))
+                 candidate["status"], candidate["statement_kind"], key, run_id,
+                 origin, candidate.get("date_value"), None))
             record_id = cursor.lastrowid
             created = True
         else:
@@ -303,11 +490,11 @@ def upsert_records(con, folder_id: int, run_id: str, candidates: list[dict],
             con.execute(
                 """UPDATE memory_records SET title=?,detail=?,date_value=?,date_raw=?,
                    amount_value=?,amount_raw=?,assignee=?,
-                   status=?,statement_kind=?,extraction_run=? WHERE id=?""",
+                   status=?,statement_kind=?,extraction_run=?,event_time=? WHERE id=?""",
                 (candidate["title"], candidate.get("detail", ""), candidate.get("date_value"),
                  candidate.get("date_raw"), candidate.get("amount_value"), candidate.get("amount_raw"),
                  candidate.get("assignee") or None,
-                 status, kind, run_id, record_id))
+                 status, kind, run_id, candidate.get("date_value"), record_id))
         # Union, not replace: a later run that cites fewer references must not
         # discard previously validated corroboration. Old rows survive only if
         # they still revalidate against the live units table (any consent
@@ -371,7 +558,9 @@ def backfill_amount_keys(con) -> int:
     if "amount_value" not in columns:
         return 0
     moved = 0
-    for row in con.execute("SELECT id,record_key FROM memory_records"):
+    # fetchall first: the collision path deletes rows, which must not
+    # disturb the iteration over the same cursor.
+    for row in con.execute("SELECT id,folder_id,record_key FROM memory_records").fetchall():
         parts = str(row["record_key"]).split("|")
         if len(parts) != 5:
             continue
@@ -379,8 +568,24 @@ def backfill_amount_keys(con) -> int:
             "SELECT excerpt FROM memory_record_evidence WHERE record_id=? AND role='supports'",
             (row["id"],))]
         token, raw = amount_class_of(excerpts)
+        new_key = row["record_key"] + "|" + token
+        # Collision-safe: a legacy key whose extended form already
+        # exists in the folder must merge into that record, never raise
+        # UNIQUE and brick Database.initialize() on every later open.
+        clash = con.execute(
+            "SELECT id FROM memory_records WHERE folder_id=? AND record_key=? AND id!=?",
+            (row["folder_id"], new_key, row["id"])).fetchone()
+        if clash is not None:
+            con.execute(
+                """INSERT OR IGNORE INTO memory_record_evidence(record_id,evidence_id,role,excerpt)
+                   SELECT ?,evidence_id,role,excerpt FROM memory_record_evidence WHERE record_id=?""",
+                (clash["id"], row["id"]))
+            con.execute("DELETE FROM memory_record_evidence WHERE record_id=?", (row["id"],))
+            con.execute("DELETE FROM memory_records WHERE id=?", (row["id"],))
+            moved += 1
+            continue
         con.execute("UPDATE memory_records SET record_key=?,amount_value=?,amount_raw=? WHERE id=?",
-                    (row["record_key"] + "|" + token,
+                    (new_key,
                      None if token in ("noamount", "multi") else token, raw, row["id"]))
         moved += 1
     return moved
@@ -545,23 +750,52 @@ def mark_conflicts(con, folder_id: int, rejected: list | None = None,
                        evidence=supports_snapshot(con, record_id) + [
                            item for pid in partners for item in supports_snapshot(con, pid)],
                        source=source)
+    # Self-contained dispute descriptions: a single record whose own
+    # statement asserts rival values is a conflict with no partner
+    # required. Marked here so the extraction, conversation, and
+    # reindex sweeps all inherit it.
+    for record in current:
+        if record["status"] == "conflicted":
+            continue
+        if not states_dispute(record.get("title"), record.get("detail")):
+            continue
+        if resolving_supports(con, record["id"]) < 1:
+            continue
+        before_row = dict(con.execute("SELECT * FROM memory_records WHERE id=?",
+                                      (record["id"],)).fetchone())
+        con.execute("UPDATE memory_records SET status='conflicted' WHERE id=?",
+                    (record["id"],))
+        log_transition(con, folder_id=folder_id, record_id=record["id"],
+                       transition="conflict_marked",
+                       prev_state=record_state(before_row),
+                       new_state=record_state({**before_row, "status": "conflicted"}),
+                       reason="self-contained dispute description; no partner required",
+                       related_record_id=None,
+                       evidence=supports_snapshot(con, record["id"]),
+                       source=source)
     # A conflict clears only when no validated partner remains: every
     # partner stopped being an explicit rival, or the evidence no longer
-    # supports the pairing.
+    # supports the pairing. A self-contained dispute needs no partner,
+    # so it stays marked while its statement still describes one (an
+    # edited detail clears normally).
     for row in con.execute("SELECT id FROM memory_records WHERE folder_id=? AND status='conflicted'", (folder_id,)):
         rivals = [pair for pair in pairs if row["id"] in pair]
-        if not rivals:
-            full = dict(con.execute("SELECT * FROM memory_records WHERE id=?",
-                                      (row["id"],)).fetchone())
-            restored = RESTORED_STATUS[full["record_type"]]
-            con.execute("UPDATE memory_records SET status=? WHERE id=?", (restored, row["id"]))
-            log_transition(con, folder_id=folder_id, record_id=row["id"],
-                           transition="conflict_cleared",
-                           prev_state=record_state(full),
-                           new_state=record_state({**full, "status": restored}),
-                           reason="no validated conflict partner remains",
-                           evidence=supports_snapshot(con, row["id"]),
-                           source=source)
+        if rivals:
+            continue
+        full = dict(con.execute("SELECT * FROM memory_records WHERE id=?",
+                                  (row["id"],)).fetchone())
+        if states_dispute(full.get("title"), full.get("detail")) \
+                and resolving_supports(con, row["id"]) >= 1:
+            continue
+        restored = RESTORED_STATUS[full["record_type"]]
+        con.execute("UPDATE memory_records SET status=? WHERE id=?", (restored, row["id"]))
+        log_transition(con, folder_id=folder_id, record_id=row["id"],
+                       transition="conflict_cleared",
+                       prev_state=record_state(full),
+                       new_state=record_state({**full, "status": restored}),
+                       reason="no validated conflict partner remains",
+                       evidence=supports_snapshot(con, row["id"]),
+                       source=source)
     return pairs
 
 
@@ -595,6 +829,78 @@ def _supersession_related(new_record, target_record, new_excerpts: list[str],
     for excerpt in target_excerpts:
         target_words.update(content_words(excerpt))
     return len(new_words & target_words) >= SUPERSESSION_EXCERPT_WORDS
+
+
+def _subject_anchors(con, record) -> set[str]:
+    """Subject anchors of one record: corroborated markers minus its
+    own attributed dimension values. Values compete for an attribute;
+    they are not identity, so they never count as subject evidence."""
+    excerpts = [row["excerpt"] for row in con.execute(
+        "SELECT excerpt FROM memory_record_evidence WHERE record_id=? AND role='supports'",
+        (record["id"],))]
+    values: set[str] = set()
+    for dim_values in statement_dimension_values(
+            record.get("title"), record.get("detail"), set(DIMENSIONS)).values():
+        values |= dim_values
+    return corroborated_markers(record.get("title"), record.get("detail"), excerpts) - values
+
+
+def subject_uncontested(con, folder_id: int, claimant, target) -> bool:
+    """Folder-level proof that an elliptical claimant has exactly one
+    possible subject: the target it cites.
+
+    The pair must demonstrably compete on one attribute (a contested
+    proper-noun dimension, or rival stored dates/amounts). Every other
+    current record must then be a non-competitor: it asserts the same
+    value as the claimant, asserts nothing on that attribute, or names
+    no subject beyond the pair's own anchors. A record asserting a
+    rival value under a subject neither side names is a competing
+    subject -- the claimant's omission is then genuinely ambiguous
+    and inheritance stays refused. Superseded and stale records are
+    history, never competitors.
+    """
+    dimension = None
+    for dim in sorted(DIMENSIONS):
+        claimant_values = statement_dimension_values(
+            claimant.get("title"), claimant.get("detail"), {dim})[dim]
+        target_values = statement_dimension_values(
+            target.get("title"), target.get("detail"), {dim})[dim]
+        if claimant_values and target_values and claimant_values != target_values:
+            dimension = dim
+            break
+    if dimension is None:
+        if claimant.get("date_value") and target.get("date_value") \
+                and claimant.get("date_value") != target.get("date_value"):
+            dimension = "date"
+        elif claimant.get("amount_value") and target.get("amount_value") \
+                and claimant.get("amount_value") != target.get("amount_value"):
+            dimension = "amount"
+    if dimension is None:
+        return False
+    anchors = _subject_anchors(con, claimant) | _subject_anchors(con, target)
+    for row in con.execute(
+            """SELECT * FROM memory_records
+               WHERE folder_id=? AND status NOT IN ('superseded','stale')""",
+            (folder_id,)):
+        other = dict(row)
+        if other["id"] in (claimant["id"], target["id"]):
+            continue
+        if dimension in DIMENSIONS:
+            values = statement_dimension_values(
+                other.get("title"), other.get("detail"), {dimension})[dimension]
+            claimant_values = statement_dimension_values(
+                claimant.get("title"), claimant.get("detail"), {dimension})[dimension]
+            if not values or values <= claimant_values:
+                continue
+        elif dimension == "date":
+            if not other.get("date_value") or other["date_value"] == claimant.get("date_value"):
+                continue
+        else:
+            if not other.get("amount_value") or other["amount_value"] == claimant.get("amount_value"):
+                continue
+        if _subject_anchors(con, other) - anchors:
+            return False
+    return True
 
 
 def apply_supersession_links(con, folder_id: int, rejected: list | None = None,
@@ -670,6 +976,7 @@ def apply_supersession_links(con, folder_id: int, rejected: list | None = None,
                 flag(new_id, eid, target["id"], "records concern unrelated matters")
                 continue
             verdict = validate_relationship(con, "supersession", new_id, target["id"])
+            allow_conflicted = False
             if verdict["verdict"] != SUPPORTED and new_row["status"] == "conflicted" \
                     and any("only a current record can supersede" in reason
                             for reason in verdict["reasons"]):
@@ -684,6 +991,17 @@ def apply_supersession_links(con, folder_id: int, rejected: list | None = None,
                     verdict = validate_relationship(
                         con, "supersession", new_id, target["id"],
                         allow_conflicted_claimant=True)
+                    allow_conflicted = True
+            if verdict["verdict"] in ("ambiguous", "contradicted") \
+                    and subject_uncontested(con, folder_id, dict(new_row), dict(target_row)):
+                # The claimant names no subject of its own and the
+                # folder holds no competing subject for its rivalry:
+                # retry with subject inheritance from the cited
+                # evidence. Every other gate re-runs unchanged.
+                verdict = validate_relationship(
+                    con, "supersession", new_id, target["id"],
+                    allow_conflicted_claimant=allow_conflicted,
+                    subject_uncontested=True)
             if verdict["verdict"] != SUPPORTED:
                 flag(new_id, eid, target["id"],
                      f"{verdict['verdict']}: {'; '.join(verdict['reasons'])}")
@@ -765,6 +1083,12 @@ def apply_supersession_links(con, folder_id: int, rejected: list | None = None,
                         continue
                     verdict = validate_relationship(con, "supersession",
                                                     winner_id, target["id"])
+                    if verdict["verdict"] in ("ambiguous", "contradicted") \
+                            and subject_uncontested(con, folder_id,
+                                                    dict(winner), dict(target_row)):
+                        verdict = validate_relationship(
+                            con, "supersession", winner_id, target["id"],
+                            subject_uncontested=True)
                     if verdict["verdict"] != SUPPORTED:
                         continue
                     con.execute("UPDATE memory_records SET status='superseded' WHERE id=?",
@@ -935,7 +1259,7 @@ def answer_eligibility(status: str, statement_kind: str, resolving_supports: int
     if status in ("stale", "superseded") or not resolving_supports:
         return ("excluded", "unsupported by current evidence")
     if status == "conflicted":
-        return ("excluded", "contradicted: surface only as a conflict pair")
+        return ("excluded", "contradicted: surface only as a conflict")
     if statement_kind == "inferred":
         return ("excluded", "inference: experiment output only, not factual answers")
     if statement_kind == "unresolved":

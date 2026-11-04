@@ -1,0 +1,210 @@
+{
+  "arms": {
+    "pipeline": {
+      "total": 72,
+      "passed": 58,
+      "accuracy": 0.8055555555555556,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 9
+        },
+        "injection": {
+          "n": 6,
+          "passed": 6
+        },
+        "missing_evidence": {
+          "n": 8,
+          "passed": 8
+        },
+        "multi_doc": {
+          "n": 8,
+          "passed": 8
+        },
+        "multimodal": {
+          "n": 12,
+          "passed": 11
+        },
+        "near_dup": {
+          "n": 8,
+          "passed": 4
+        },
+        "paraphrase": {
+          "n": 10,
+          "passed": 9
+        },
+        "temporal": {
+          "n": 10,
+          "passed": 3
+        }
+      },
+      "failures": [
+        "C08",
+        "V05",
+        "N01",
+        "N02",
+        "N05",
+        "N08",
+        "P09",
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T07",
+        "T08",
+        "T09"
+      ],
+      "retrieval": {
+        "recall_at_1": 0.8467741935483871,
+        "recall_at_1_n": 62,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 62,
+        "mrr": 0.9919354838709677,
+        "mrr_n": 62,
+        "hard_negative_pass": 1.0,
+        "hard_negative_pass_n": 62
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 0.9444444444444444,
+      "citation_complete_n": 18,
+      "abstention_rate": 1.0,
+      "abstention_n": 8
+    },
+    "keyword": {
+      "total": 72,
+      "passed": 72,
+      "accuracy": 1.0,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 10
+        },
+        "injection": {
+          "n": 6,
+          "passed": 6
+        },
+        "missing_evidence": {
+          "n": 8,
+          "passed": 8
+        },
+        "multi_doc": {
+          "n": 8,
+          "passed": 8
+        },
+        "multimodal": {
+          "n": 12,
+          "passed": 12
+        },
+        "near_dup": {
+          "n": 8,
+          "passed": 8
+        },
+        "paraphrase": {
+          "n": 10,
+          "passed": 10
+        },
+        "temporal": {
+          "n": 10,
+          "passed": 10
+        }
+      },
+      "failures": [],
+      "retrieval": {
+        "recall_at_1": 0.782258064516129,
+        "recall_at_1_n": 62,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 62,
+        "mrr": 0.9516129032258066,
+        "mrr_n": 62,
+        "hard_negative_pass": 0.9354838709677419,
+        "hard_negative_pass_n": 62
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 1.0,
+      "citation_complete_n": 18,
+      "abstention_rate": 1.0,
+      "abstention_n": 8
+    },
+    "hybrid": {
+      "total": 72,
+      "passed": 72,
+      "accuracy": 1.0,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 10
+        },
+        "injection": {
+          "n": 6,
+          "passed": 6
+        },
+        "missing_evidence": {
+          "n": 8,
+          "passed": 8
+        },
+        "multi_doc": {
+          "n": 8,
+          "passed": 8
+        },
+        "multimodal": {
+          "n": 12,
+          "passed": 12
+        },
+        "near_dup": {
+          "n": 8,
+          "passed": 8
+        },
+        "paraphrase": {
+          "n": 10,
+          "passed": 10
+        },
+        "temporal": {
+          "n": 10,
+          "passed": 10
+        }
+      },
+      "failures": [],
+      "retrieval": {
+        "recall_at_1": 0.8467741935483871,
+        "recall_at_1_n": 62,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 62,
+        "mrr": 0.9919354838709677,
+        "mrr_n": 62,
+        "hard_negative_pass": 1.0,
+        "hard_negative_pass_n": 62
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 1.0,
+      "citation_complete_n": 18,
+      "abstention_rate": 1.0,
+      "abstention_n": 8
+    }
+  },
+  "false_supported_rate": {
+    "pipeline": 0.0,
+    "keyword": 0.0,
+    "hybrid": 0.0
+  },
+  "meta": {
+    "benchmark": "v1",
+    "frozen": true,
+    "freeze_hash": "5583a64ca3261d670d2a3a0def4dd142fb8630aad42c4266d0b32ec2706048e5",
+    "cases": 72,
+    "seeded_records": {
+      "contradiction": 7,
+      "injection": 4,
+      "missing_evidence": 2,
+      "multi_doc": 4,
+      "multimodal": 4,
+      "near_dup": 4,
+      "paraphrase": 4,
+      "temporal": 4
+    },
+    "egress_total": 0,
+    "offline": true
+  }
+}

@@ -20,20 +20,45 @@ def add_folder(path: str, cloud_consent: bool = typer.Option(False, "--cloud-con
 
 @app.command()
 def index(folder_id: int | None = None):
-    _, _, indexer = services()
+    settings, db, indexer = services()
     try:
-        typer.echo(json.dumps(indexer.index_folder(folder_id), indent=2))
+        result = indexer.index_folder(folder_id)
     except ValueError as exc:
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(1) from exc
+    # Learn automatically from the new evidence before exiting; the
+    # gates inside decide whether any model call is legitimate.
+    from yaad.memory.auto import schedule_auto_memory, wait_auto_memory
+    if folder_id is not None:
+        schedule_auto_memory(db, settings, [folder_id])
+    else:
+        with db.connect() as con:
+            schedule_auto_memory(db, settings,
+                                 [row["id"] for row in con.execute("SELECT id FROM folders ORDER BY id")])
+    wait_auto_memory()
+    typer.echo(json.dumps(result, indent=2))
 
 @app.command()
 def ask(question: str, folder_id: int | None = None):
-    _, db, _ = services()
-    typer.echo(json.dumps(answer_question(db, question, folder_id), ensure_ascii=False, indent=2))
+    settings, db, _ = services()
+    typer.echo(json.dumps(answer_question(db, question, folder_id, settings), ensure_ascii=False, indent=2))
+    from yaad.memory.auto import schedule_conversation_learning, wait_auto_memory
+    schedule_conversation_learning(db, settings, folder_id, question)
+    wait_auto_memory()
 
 @app.command()
 def serve(host: str = "127.0.0.1", port: int = 8000):
+    import os
+
+    if host not in ("127.0.0.1", "localhost", "::1") and not os.getenv("YAAD_API_TOKEN"):
+        # The API has no per-route auth; exposing it beyond loopback
+        # without the shared token would publish indexed files and
+        # paid endpoints to the network.
+        typer.echo(
+            "Error: refusing to bind a non-loopback host without YAAD_API_TOKEN set. "
+            "Set YAAD_API_TOKEN and send it as 'Authorization: Bearer [REDACTED]' from clients, "
+            "or bind 127.0.0.1 (the default).", err=True)
+        raise typer.Exit(2)
     uvicorn.run("yaad.api.main:app", host=host, port=port, reload=False)
 
 @app.command()

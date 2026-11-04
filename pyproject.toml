@@ -11,9 +11,14 @@ dependencies = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "pydantic>=2.8", "h
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "reportlab>=4.2"]
+semantic = ["fastembed>=0.9", "numpy>=1.26"]
 
 [project.scripts]
 yaad = "yaad.cli:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-rs"
 
 [tool.setuptools.packages.find]
 include = ["yaad*"]

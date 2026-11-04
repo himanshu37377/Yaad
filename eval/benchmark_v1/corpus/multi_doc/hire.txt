@@ -1,0 +1,1 @@
+Benchmark V1 fixture multi_doc/hire.txt. The Spring Fest venue hire costs Rs 18,000.

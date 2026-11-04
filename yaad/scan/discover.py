@@ -14,13 +14,21 @@ def discover(folder: Path, limit: int) -> tuple[list[tuple[Path, str]], int]:
     """
     seen = 0
 
+    root = folder.resolve()
+
     def candidates():
         nonlocal seen
         for path in folder.rglob("*"):
             # Hidden entries *inside* the folder are skipped; a hidden
             # component in the folder's own path must not empty the index.
+            # Only supported kinds consume the budget: unsupported files
+            # must not starve indexable ones beyond the cap. Symlinks
+            # resolving outside the consented folder are never followed:
+            # consent covers the folder, not wherever a link points.
             relative = path.relative_to(folder)
-            if path.is_file() and not any(part.startswith(".") for part in relative.parts):
+            if (path.is_file() and path.suffix.lower() in SUPPORTED
+                    and not any(part.startswith(".") for part in relative.parts)
+                    and path.resolve().is_relative_to(root)):
                 seen += 1
                 yield path
 

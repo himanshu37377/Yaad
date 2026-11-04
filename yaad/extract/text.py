@@ -19,20 +19,41 @@ def extract_text(path: Path) -> tuple[list[tuple[str, dict]], bool]:
         return _chunk(text, path.stem) or [("", {"type": "text_span", "section": path.stem, "start": 0, "end": 0})], truncated
     if suffix == ".docx":
         from docx import Document
+        from docx.table import Table
+        from docx.text.paragraph import Paragraph
+
         doc = Document(path)
         result = []
         offset = 0
         total = 0
         truncated = False
-        for para in doc.paragraphs:
-            value = para.text.strip()
-            if not value:
-                continue
+
+        def _add(value: str) -> bool:
+            nonlocal offset, total, truncated
             total += len(value.encode("utf-8")) + 1
             if total > MAX_TEXT_BYTES:
                 truncated = True
-                break
+                return False
             result.append((value, {"type": "text_span", "section": path.stem, "start": offset, "end": offset + len(value)}))
             offset += len(value) + 1
+            return True
+
+        # Walk body children in document order so table cell text (fees,
+        # deadlines, rosters) is indexed alongside paragraphs instead of
+        # being silently dropped.
+        for child in doc.element.body.iterchildren():
+            if child.tag.endswith("}p"):
+                value = Paragraph(child, doc).text.strip()
+                if value and not _add(value):
+                    break
+            elif child.tag.endswith("}tbl"):
+                table = Table(child, doc)
+                for row in table.rows:
+                    cells = [cell.text.strip() for cell in row.cells]
+                    value = " | ".join(cell for cell in cells if cell)
+                    if value and not _add(value):
+                        break
+                if truncated:
+                    break
         return result, truncated
     return [], False

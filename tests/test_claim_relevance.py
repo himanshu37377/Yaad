@@ -90,10 +90,13 @@ def test_r2_matter_gate_blocks_other_background_matches(tmp_path):
 def test_r3_irrelevant_claim_cannot_manufacture_conflict(tmp_path):
     store = Store(tmp_path / "r3.sqlite3")
     store.add_file("a.txt", [("ev_a", "The registration fee is Rs 150")])
-    store.add_file("b.txt", [("ev_b", "The old note is archived")])
+    # The irrelevant record is grounded in its own note (intake now
+    # rejects phantom statements outright); its matter stays unrelated
+    # and its value never enters the fee units pipeline.
+    store.add_file("b.txt", [("ev_b", "Old note archived: the 2020 grant was Rs 999")])
     store.add_records("run-1", [candidate(
-        "Registration fee history", "note archived", [("ev_b", "old note is archived")],
-        detail="Registration fee history: Rs 999 in 2020",
+        "Registration fee history", "note archived", [("ev_b", "note archived")],
+        detail="Note archived: grant Rs 999 in 2020",
         record_type="decision", status="decided", date_value=None, date_raw=None)])
     twin = Store(tmp_path / "r3t.sqlite3")
     twin.add_file("a.txt", [("ev_a", "The registration fee is Rs 150")])
@@ -164,14 +167,17 @@ def test_r5_proposal_and_multi_claim_stay_answerable(tmp_path):
     budgets.add_file("budget.txt", [("ev_a", "Contingency budget amount Rs 2500 approved",
                                      '{"type":"text_span","section":"contingency"}'),
                                     ("ev_b", "Total budget approved is Rs 25000",
-                                     '{"type":"text_span","section":"total"}')])
+                                     '{"type":"text_span","section":"total"}'),
+                                    ("ev_c", "Total budget approved is Rs 25000",
+                                     '{"type":"text_span","section":"total-confirmation"}')])
     budgets.add_records("run-1", [
         candidate("Contingency budget", "contingency budget amount",
-                  [("ev_a", "Contingency budget amount Rs 2500")],
+                  [("ev_a", "Contingency budget amount Rs 2500"),
+                   ("ev_b", "Total budget approved is Rs 25000")],
                   detail="Contingency budget amount Rs 2500, total Rs 25000",
                   record_type="decision", status="decided", date_value=None, date_raw=None),
         candidate("Total budget", "total budget approved",
-                  [("ev_b", "Total budget approved is Rs 25000")],
+                  [("ev_c", "Total budget approved is Rs 25000")],
                   detail="Total budget approved is Rs 25000",
                   record_type="decision", status="decided", date_value=None, date_raw=None),
     ])

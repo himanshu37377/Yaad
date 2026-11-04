@@ -83,9 +83,28 @@ def _failure_label(client, exc: Exception) -> str:
 # skipped from processing, and reported as capped (split the folder).
 MAX_INDEX_FILES = 100_000
 
+# Per-kind byte ceilings checked from stat() before any whole-file read:
+# an oversized media file must fail honestly, never OOM the indexer or
+# inflate cloud egress. The PDF cap mirrors Meta's inline-file limit.
+MAX_PDF_BYTES = 50_000_000
+MAX_IMAGE_BYTES = 25_000_000
+MAX_AUDIO_BYTES = 500_000_000
+
 class Indexer:
     def __init__(self, db: Database, settings: Settings):
         self.db, self.settings = db, settings
+        self._cloud_spend_usd = 0.0
+
+    def _spend_refusal(self) -> str | None:
+        """Why the next cloud call must not start: this run's indexing
+        ceiling spent, or the global cap reached. Cache hits and local
+        inference never reach this gate (they cost nothing)."""
+        ceiling = float(getattr(self.settings, "index_max_spend_usd", 0.0) or 0.0)
+        if ceiling > 0 and self._cloud_spend_usd >= ceiling:
+            return (f"indexing spend ceiling ${ceiling:.2f} reached "
+                    f"(${self._cloud_spend_usd:.4f} spent this run)")
+        from yaad.llm.meta_config import spend_refusal
+        return spend_refusal(self.db, self.settings, 0.0)
 
     def add_folder(self, path: str, cloud_consent: bool = False) -> int:
         folder = Path(path).expanduser().resolve()
@@ -141,16 +160,25 @@ class Indexer:
                     mark_conflicts(con, folder["id"], source=sweep_source)
                     apply_supersession_links(con, folder["id"], source=sweep_source)
                     mark_stale(con, folder["id"], source=sweep_source)
+            except Exception as exc:
+                # A failed pass must read as failed (with its error),
+                # never as a clean completion.
+                with self.db.transaction() as con:
+                    con.execute("UPDATE index_runs SET state='failed',finished_at=CURRENT_TIMESTAMP,error=? WHERE id=?",
+                                (str(exc)[:1000], run_id))
+                raise
             finally:
                 with self.db.transaction() as con:
-                    con.execute("UPDATE index_runs SET state='complete',finished_at=CURRENT_TIMESTAMP WHERE id=?", (run_id,))
+                    con.execute("UPDATE index_runs SET state='complete',finished_at=CURRENT_TIMESTAMP WHERE id=? AND state='running'", (run_id,))
         return counts
 
     def _sweep_deleted(self, folder_id: int) -> int:
         """Drop index rows for files deleted, moved, or renamed since the last pass."""
+        from yaad.memory.auto import is_conversation_path
         with self.db.connect() as con:
             rows = con.execute("SELECT id,path FROM files WHERE folder_id=?", (folder_id,)).fetchall()
-        missing = [row["id"] for row in rows if not Path(row["path"]).exists()]
+        missing = [row["id"] for row in rows
+                   if not is_conversation_path(row["path"]) and not Path(row["path"]).exists()]
         if missing:
             with self.db.transaction() as con:
                 # Keep cloud history browsable after the source file is gone.
@@ -185,7 +213,14 @@ class Indexer:
         units = []
         local_mode = is_local(self.settings)
         model_allowed = local_mode or (consent and self.settings.cloud_enabled)
-        if kind == "pdf":
+        size_cap = {"pdf": MAX_PDF_BYTES, "image": MAX_IMAGE_BYTES,
+                    "audio": MAX_AUDIO_BYTES}.get(kind)
+        if size_cap is not None and stat.st_size > size_cap:
+            status, partial = "partial", 1
+            file_error = (f"File is {stat.st_size:,} bytes, over the "
+                          f"{size_cap:,}-byte {kind} limit; it was not read. "
+                          f"Split or shrink the file to index it.")
+        elif kind == "pdf":
             units, scanned = extract_pdf(path)
             text_pages = {locator["page"]: text for text, locator in units if locator.get("type") == "pdf_page"}
             if text_pages and model_allowed:
@@ -294,8 +329,17 @@ class Indexer:
                 try:
                     wav_path, duration = convert_to_wav(str(path))
                     try:
+                        # Total-duration cap: audio_max_minutes bounds the
+                        # whole recording, not just each chunk. Longer
+                        # audio is transcribed up to the cap and marked
+                        # partial, never billed without bound.
+                        max_total_seconds = self.settings.audio_max_minutes * 60
+                        over_duration = duration > max_total_seconds
                         chunk_limit = min(540, max(60, self.settings.audio_max_minutes * 60 - 60))
                         for chunk, offset in chunk_wav(wav_path, limit_seconds=chunk_limit):
+                            if offset >= max_total_seconds:
+                                os.unlink(chunk)
+                                continue
                             try:
                                 chunk_bytes = Path(chunk).read_bytes()
                                 turns = self._cloud_call(lambda: client.transcribe(chunk), "audio transcription", len(chunk_bytes), "audio chunk", client.model if local_mode else "muse-voice-transcribe-1.0", file_id, chunk_bytes, client=client)
@@ -310,6 +354,11 @@ class Indexer:
                                         units.append((text, {"type": "audio_segment", "start": start, "end": end, "speaker": turn.get("speaker"), "lang": turn.get("language")}))
                             finally:
                                 os.unlink(chunk)
+                        if over_duration:
+                            partial = 1
+                            if not file_error:
+                                file_error = (f"Audio is {duration / 60:.1f} minutes; only the first "
+                                              f"{self.settings.audio_max_minutes} minutes were transcribed")
                     finally:
                         if Path(wav_path).resolve() != path.resolve():
                             os.unlink(wav_path)
@@ -347,12 +396,6 @@ class Indexer:
                 cursor = con.execute("INSERT INTO units(file_id,evidence_id,kind,locator,text,meta) VALUES(?,?,?,?,?,?)",
                             (file_id, eid, unit_meta.get("kind", locator["type"]), json.dumps(locator), text,
                              json.dumps({**unit_meta, "unsupported": locator.get("unsupported", False)})))
-                if unit_meta.get("kind") == "derived_fact":
-                    con.execute("INSERT INTO facts(file_id,unit_id,doc_type,field,value_raw,value_norm,verification,evidence) VALUES(?,?,?,?,?,?,?,?)",
-                                (file_id, cursor.lastrowid, "document", "fact", text, text.casefold(),
-                                 "source_excerpt_verified", json.dumps({"evidence_id": unit_meta.get("source_evidence_id"),
-                                                                         "excerpt": unit_meta.get("source_excerpt"),
-                                                                         "page": locator.get("page")})))
                 if locator.get("type") == "image" and unit_meta.get("origin") in ("meta_ai", "local_model"):
                     con.execute("INSERT INTO photo_meta(file_id,source,key,value,confidence) VALUES(?,'model','understanding',?,NULL)",
                                 (file_id, text[:4000]))
@@ -462,6 +505,12 @@ class Indexer:
                 cached = None if bypass_cache else con.execute("SELECT response FROM cache WHERE key=?", (key,)).fetchone()
             if cached:
                 return json.loads(cached["response"])
+        # Spend gate for the real call ahead: refusal fails this file
+        # honestly (its error names the ceiling), never silently
+        # reroutes to another provider.
+        refusal = self._spend_refusal()
+        if refusal:
+            raise RuntimeError(refusal)
         try:
             result = operation()
             if key:
@@ -470,6 +519,8 @@ class Indexer:
             return result
         finally:
             self._egress(file_id, None, purpose, size, content_kind, model, getattr(client, "last_call", None))
+            info = getattr(client, "last_call", None) or {}
+            self._cloud_spend_usd += float(info.get("estimated_cost_usd") or 0)
 
     def _record_failure(self, folder_id, path, kind, exc, consent=False):
         digest = sha256_file(str(path)) if path.exists() else ""

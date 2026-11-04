@@ -100,6 +100,44 @@ def _dump(db, folder_id, out: Path, label: str) -> None:
     (out / f"units_{label}.json").write_text(json.dumps(units, indent=2), encoding="utf-8")
 
 
+def _retrieval_trace(db, question: str, folder_id: int, settings, selected: list) -> dict:
+    """Per-question retrieval provenance: each channel's ranking, the
+    fused order with RRF scores, semantic similarities when that
+    channel is enabled, and the evidence finally selected. Recorded so
+    failures can be stage-attributed (retrieval vs ranking vs
+    gating) instead of guessed at from answers alone."""
+    from yaad.query.hybrid import hybrid_search, retrieve_channel, rrf_scores
+    channels = ["keyword", "memory"]
+    per_channel: dict[str, list] = {}
+    for channel in channels:
+        try:
+            per_channel[channel] = retrieve_channel(db, question, channel, folder_id=folder_id)
+        except Exception:
+            per_channel[channel] = []
+    similarities: dict[str, float] = {}
+    if getattr(settings, "semantic_retrieval", False):
+        channels.append("semantic")
+        try:
+            from yaad.query.embeddings import semantic_scores
+            similarities = {eid: round(score, 4) for eid, score in
+                            semantic_scores(db, question, folder_id).items()}
+            per_channel["semantic"] = retrieve_channel(db, question, "semantic",
+                                                       folder_id=folder_id)
+        except Exception:
+            per_channel["semantic"] = []
+    scores = rrf_scores({channel: per_channel[channel] for channel in channels})
+    try:
+        fused_rows = hybrid_search(db, question, folder_id, channels=tuple(channels))
+    except Exception:
+        fused_rows = []
+    return {"channels": channels, "per_channel": per_channel,
+            "similarities": similarities,
+            "fused": [{"evidence_id": row["evidence_id"], "rank": index + 1,
+                       "rrf": round(scores.get(row["evidence_id"], 0.0), 6)}
+                      for index, row in enumerate(fused_rows)],
+            "selected": list(selected)}
+
+
 def live(max_spend: float) -> int:
     if check_fixtures():
         print("Fixtures not ready; run the dry run first.")
@@ -181,7 +219,10 @@ def live(max_spend: float) -> int:
                     transcript.append({"id": item["id"], "arm": arm, "folder": folder_name,
                                        "question": item["question"],
                                        "result": {**result, "evidence": evidence},
-                                       "memory": result.get("memory")})
+                                       "memory": result.get("memory"),
+                                       "retrieval": _retrieval_trace(
+                                           arm_db, item["question"], folder_id, settings,
+                                           [card["id"] for card in result.get("evidence", [])])})
             _dump(full_db, folder_id, RESULTS, f"{folder_name}_full")
             _dump(baseline_db, folder_id, RESULTS, f"{folder_name}_baseline")
     (RESULTS / "transcript.jsonl").write_text(

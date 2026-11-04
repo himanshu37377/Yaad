@@ -1,5 +1,8 @@
 # Evaluation report
 
+> **Historical snapshot (2026-10-30/31).** Test counts and findings below describe the codebase at that date and are superseded by the README verification block. Kept as the audit record.
+
+
 Local checks re-verified 2026-10-30. The cloud rehearsal below is the 2026-10-28 run.
 
 ## Local end-to-end checks

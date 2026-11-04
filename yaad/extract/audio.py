@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -19,8 +20,16 @@ def convert_to_wav(path: str) -> tuple[str, float]:
         raise RuntimeError("ffmpeg is required to convert this audio format")
     temp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
     temp.close()
-    subprocess.run(["ffmpeg", "-nostdin", "-y", "-i", path, "-ac", "1", "-ar", "16000", "-sample_fmt", "s16", temp.name],
-                   check=True, capture_output=True, timeout=180)
+    try:
+        subprocess.run(["ffmpeg", "-nostdin", "-y", "-i", path, "-ac", "1", "-ar", "16000", "-sample_fmt", "s16", temp.name],
+                       check=True, capture_output=True, timeout=180)
+    except Exception:
+        # Never leak the half-written temp WAV on conversion failure.
+        try:
+            os.unlink(temp.name)
+        except OSError:
+            pass
+        raise
     with wave.open(temp.name, "rb") as wav:
         duration = wav.getnframes() / wav.getframerate()
     return temp.name, duration

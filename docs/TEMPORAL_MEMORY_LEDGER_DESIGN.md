@@ -8,6 +8,11 @@ Implementation update (2026-10-31): implemented as designed
 transitions that predated the ledger. The body below is the original
 design record.
 
+Note: references to `VALIDATION_RESULTS.md` and
+`INDEPENDENT_PROJECT_AUDIT.md` are internal working notes not shipped
+with this repo (`tests/test_memory_ledger.py` below is
+`tests/test_temporal_ledger.py` on disk).
+
 ## 1. Current architecture findings
 
 ### 1.1 Memory record schema and lifecycle

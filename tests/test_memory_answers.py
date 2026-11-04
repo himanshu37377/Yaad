@@ -105,17 +105,17 @@ def test_stale_and_superseded_records_are_excluded(tmp_path):
 
 def test_superseded_record_yields_to_successor(tmp_path):
     store = Store(tmp_path / "s2.sqlite3")
-    store.add_file("a.txt", [("ev_old", "Venue is the old hall"), ("ev_new", "Venue is the new auditorium")])
+    store.add_file("a.txt", [("ev_old", "Venue is the old hall"), ("ev_new", "Venue moved to the new auditorium")])
     store.add_records("run-1", [
         candidate("Venue old hall", "venue hall", [("ev_old", "Venue is the old hall")],
                   record_type="decision", status="decided", date_value=None, date_raw=None),
         candidate("Venue auditorium", "venue auditorium",
-                  [("ev_new", "Venue is the new auditorium"),
+                  [("ev_new", "Venue moved to the new auditorium"),
                    ("ev_old", "Venue is the old hall")],
                   detail="Venue auditorium chosen for the fest",
                   record_type="decision", status="decided", date_value=None, date_raw=None,
                   evidence=[{"evidence_id": "ev_new", "role": "supports",
-                             "excerpt": "Venue is the new auditorium"},
+                             "excerpt": "Venue moved to the new auditorium"},
                             {"evidence_id": "ev_old", "role": "supersedes",
                              "excerpt": "Venue is the old hall"}]),
     ])
@@ -287,11 +287,16 @@ def test_repeated_extraction_union_yields_one_claim(tmp_path):
 
 
 def test_evidence_overlap_alone_does_not_match(tmp_path):
+    # The venue record cites the same unit the draft answer comes
+    # from (one unit, two statements): sharing a unit must not make an
+    # unrelated record match the question. (The record's statement is
+    # grounded in its own cited sentence, as intake now requires.)
     store = Store(tmp_path / "o.sqlite3")
-    store.add_file("a.txt", [("ev_a", "The draft is due March 3rd")])
+    store.add_file("a.txt", [("ev_a", "The draft is due March 3rd and the venue holds two hundred guests")])
     store.add_records("run-1", [candidate(
-        "Zebra budget alpha", "draft due", [("ev_a", "draft is due March 3rd")],
-        detail="Zebra budget alpha")])
+        "Venue guest capacity", "venue guests", [("ev_a", "venue holds two hundred guests")],
+        detail="Venue holds two hundred guests",
+        record_type="decision", status="decided", date_value=None, date_raw=None)])
     result = store.ask("when is the draft due?")
     assert result["memory"]["used"] is False
     assert result["status"] == "answered"

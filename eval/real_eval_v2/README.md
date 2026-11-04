@@ -1,7 +1,7 @@
-# Evaluation V2 (prepared, not yet run live)
+# Evaluation V2 (live run completed 2026-10-30)
 
 V2 is independent from V1: `eval/real_eval/` artifacts are never read
-for writing and never modified. **No live calls have been made.**
+for writing and never modified. **Live run completed 2026-10-30; see `results/` (local-only, gitignored: egress receipts, transcripts, report). Reruns need explicit spend approval.**
 
 ## Scope
 

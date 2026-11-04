@@ -374,8 +374,14 @@ def test_memory_report_dialog_structure_validation_and_submission():
     assert "#memory-report-dialog" in submit and ".close()" in submit
 
 
-def test_memory_extraction_is_explicit_and_never_automatic():
+def test_memory_page_is_transparency_first_with_manual_recovery():
+    # Learning is automatic (server-side, after indexing and from Ask
+    # statements); the Memory page manages what was learned and keeps a
+    # manual re-extract control strictly as a recovery mechanism.
     assert 'id="memory-extract" type="button" disabled' in HTML
+    assert "Re-extract manually" in HTML
+    assert "learns automatically" in HTML
+    assert "Recovery" in HTML or "recovery" in HTML
     run = function_source("runMemoryExtract")
     assert "/api/memory/extract" in run
     assert "folder_id" in run

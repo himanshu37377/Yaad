@@ -3,12 +3,17 @@
 Date: 2026-10-30. Status: design only; no source or test changes made.
 Implementation update (2026-10-31): Phase 1 was implemented as designed
 (deterministic FTS5 + Tier A memory fusion via RRF in
-`yaad/query/hybrid.py`). Phases 2 and 3 (embeddings/reranking) were not
-implemented; no semantic retrieval exists. The body below is the
-original design record.
+`yaad/query/hybrid.py`). Update (final audit): an opt-in semantic
+channel now exists (`yaad/query/embeddings.py`, FastEmbed/bge-small,
+default off via `YAAD_SEMANTIC_RETRIEVAL`); Phase 3 reranking is still
+not implemented. The body below is the original design record.
 Method: code inspection plus disposable read-only probes (`/tmp`, no
 production writes, no model spend). All quoted behaviors were measured,
 not inferred.
+
+Note: references to `VALIDATION_RESULTS.md` are internal working notes
+not shipped with this repo; this file is the preserved Oct 2026 design
+record.
 
 ## 1. Background and scope
 

@@ -3,6 +3,7 @@
 Test date: 2026-10-29
 Mode: Meta Model API Standard models; synthetic fixtures only; video excluded.
 The report stores capability metadata, latency, token usage, and cost estimates; it does not store prompts, file contents, responses, API keys, or auth headers.
+Rows below are cumulative ledger order across repeated suite runs (latest run last); repeated fixture names are re-runs, not duplicates.
 
 - **Local HTTP/routing error checks (mocked; no network): PASS** — {"HTTP status and error code preserved": true, "contributor model rejected": true, "malformed response rejected": true, "standard model default": true, "timeout propagated without retry": true, "video unsupported": true}
 - **PDF: deadline_notice_a.pdf: FAIL** — model `muse-spark-1.3`, endpoint `/responses`, format `application/pdf inline data URL / input_file`, HTTP 200, 6298 ms, input/output/cached tokens 2682/384/0, estimated cost $0.004985.
@@ -54,5 +55,4 @@ The report stores capability metadata, latency, token usage, and cost estimates;
 - Video is out of scope and is not included in discovery or tests.
 - Meta exposes token usage in responses and the account dashboard; this tool cannot read the account credit balance.
 - No max_output_tokens parameter is sent; estimated costs reflect actual returned usage when available.
-- The suite ledger is local to this repository and does not account for other API keys, Playground usage, or earlier exploratory requests.
 - This report summarizes all calls recorded in the local suite ledger; that ledger excludes other API keys, Playground usage, and earlier exploratory requests.

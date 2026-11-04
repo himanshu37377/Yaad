@@ -1,0 +1,1 @@
+Benchmark V1 fixture near_dup/venues.txt. Spring Fest takes place at Crystal Pavilion. Crystal Palace is a hotel nearby and is not the fest venue. Riverside Hall hosted last year's fest.

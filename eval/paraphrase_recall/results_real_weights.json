@@ -1,0 +1,238 @@
+{
+  "dataset": {
+    "units": 22,
+    "cases": 11,
+    "hard_negatives": 4,
+    "seeded_records": 3,
+    "limitations": "authored keyword-hostile paraphrases, tiny corpus, single domain, no confidence intervals"
+  },
+  "semantic_floor": 0.3,
+  "semantic_stats_last_call": {
+    "model": "BAAI/bge-small-en-v1.5",
+    "units": 22,
+    "embedded": 0,
+    "cache_hits": 22,
+    "min_similarity": 0.3,
+    "ms": 3.0
+  },
+  "overall": {
+    "keyword": {
+      "recall@1": 0.364,
+      "recall@5": 0.364,
+      "mrr": 0.364,
+      "n": 11,
+      "mean_ms": 0.4
+    },
+    "production": {
+      "recall@1": 0.364,
+      "recall@5": 0.364,
+      "mrr": 0.364,
+      "n": 11,
+      "mean_ms": 0.7
+    },
+    "production_semantic": {
+      "recall@1": 0.909,
+      "recall@5": 1.0,
+      "mrr": 0.955,
+      "n": 11,
+      "mean_ms": 54.8
+    },
+    "keyword_semantic": {
+      "recall@1": 0.909,
+      "recall@5": 1.0,
+      "mrr": 0.955,
+      "n": 11,
+      "mean_ms": 4.1
+    }
+  },
+  "by_kind": {
+    "paraphrase": {
+      "keyword": {
+        "recall@1": 0.125,
+        "recall@5": 0.125,
+        "mrr": 0.125,
+        "n": 8,
+        "mean_ms": null
+      },
+      "production": {
+        "recall@1": 0.125,
+        "recall@5": 0.125,
+        "mrr": 0.125,
+        "n": 8,
+        "mean_ms": null
+      },
+      "production_semantic": {
+        "recall@1": 0.875,
+        "recall@5": 1.0,
+        "mrr": 0.938,
+        "n": 8,
+        "mean_ms": null
+      },
+      "keyword_semantic": {
+        "recall@1": 0.875,
+        "recall@5": 1.0,
+        "mrr": 0.938,
+        "n": 8,
+        "mean_ms": null
+      }
+    },
+    "keyword-control": {
+      "keyword": {
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "n": 3,
+        "mean_ms": null
+      },
+      "production": {
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "n": 3,
+        "mean_ms": null
+      },
+      "production_semantic": {
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "n": 3,
+        "mean_ms": null
+      },
+      "keyword_semantic": {
+        "recall@1": 1.0,
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "n": 3,
+        "mean_ms": null
+      }
+    }
+  },
+  "hard_negative_pass": {
+    "keyword": 0.0,
+    "production": 0.0,
+    "production_semantic": 0.5,
+    "keyword_semantic": 0.5
+  },
+  "detail": {
+    "cases": [
+      {
+        "id": "p1",
+        "kind": "paraphrase",
+        "keyword": null,
+        "production": null,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "p2",
+        "kind": "paraphrase",
+        "keyword": null,
+        "production": null,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "p3",
+        "kind": "paraphrase",
+        "keyword": null,
+        "production": null,
+        "production_semantic": 2,
+        "keyword_semantic": 2
+      },
+      {
+        "id": "p4",
+        "kind": "paraphrase",
+        "keyword": null,
+        "production": null,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "p5",
+        "kind": "paraphrase",
+        "keyword": null,
+        "production": null,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "p6",
+        "kind": "paraphrase",
+        "keyword": null,
+        "production": null,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "p7",
+        "kind": "paraphrase",
+        "keyword": null,
+        "production": null,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "p8",
+        "kind": "paraphrase",
+        "keyword": 1,
+        "production": 1,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "k1",
+        "kind": "keyword-control",
+        "keyword": 1,
+        "production": 1,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "k2",
+        "kind": "keyword-control",
+        "keyword": 1,
+        "production": 1,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      },
+      {
+        "id": "k3",
+        "kind": "keyword-control",
+        "keyword": 1,
+        "production": 1,
+        "production_semantic": 1,
+        "keyword_semantic": 1
+      }
+    ],
+    "hard_negatives": [
+      {
+        "id": "h1",
+        "keyword": false,
+        "production": false,
+        "production_semantic": true,
+        "keyword_semantic": true
+      },
+      {
+        "id": "h2",
+        "keyword": false,
+        "production": false,
+        "production_semantic": false,
+        "keyword_semantic": false
+      },
+      {
+        "id": "h3",
+        "keyword": false,
+        "production": false,
+        "production_semantic": false,
+        "keyword_semantic": false
+      },
+      {
+        "id": "h4",
+        "keyword": false,
+        "production": false,
+        "production_semantic": true,
+        "keyword_semantic": true
+      }
+    ]
+  }
+}

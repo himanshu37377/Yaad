@@ -1,0 +1,260 @@
+{
+  "suite": "suite_academic.json",
+  "freeze": "5fad1731ed756f43",
+  "n": 4,
+  "traces": [
+    {
+      "id": "AC-1",
+      "question": "When is the CS201 midterm?",
+      "expected_status": "conflict-or-superseded",
+      "pipeline_status": "answered",
+      "answer": "CS201 midterm is on November 18, 2026 in Room LH-2. Revised: CS201 midterm moved to November 20, 2026 in Room LH-2.",
+      "citations": [
+        "ac_e1",
+        "ac_e3"
+      ],
+      "retrieval": {
+        "keyword": [
+          "ac_e1",
+          "ac_e3"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "ac_e1",
+        "ac_e3"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.1,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.7,
+          "detail": "2 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "answered"
+        }
+      ]
+    },
+    {
+      "id": "AC-2",
+      "question": "What is the Assignment 4 deadline?",
+      "expected_status": "answered",
+      "pipeline_status": "answered",
+      "answer": "Assignment 4 submission deadline is November 5, 2026.",
+      "citations": [
+        "ac_e2"
+      ],
+      "retrieval": {
+        "keyword": [
+          "ac_e2"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "ac_e2"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.6,
+          "detail": "1 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "answered"
+        }
+      ]
+    },
+    {
+      "id": "AC-3",
+      "question": "At what time can students meet Prof. Rao?",
+      "expected_status": "answered",
+      "pipeline_status": "answered",
+      "answer": "Office hours for Prof.",
+      "citations": [
+        "ac_e4"
+      ],
+      "retrieval": {
+        "keyword": [
+          "ac_e4"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "ac_e4"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.6,
+          "detail": "1 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "answered"
+        }
+      ]
+    },
+    {
+      "id": "AC-4",
+      "question": "What is the midterm seating plan?",
+      "expected_status": "not_found",
+      "pipeline_status": "not_found",
+      "answer": "Insufficient evidence to answer.",
+      "citations": [],
+      "retrieval": {
+        "keyword": [
+          "ac_e1",
+          "ac_e3"
+        ],
+        "memory": []
+      },
+      "relevant": [],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.6,
+          "detail": "2 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "not_found"
+        }
+      ]
+    }
+  ],
+  "note": "dry-run: deterministic pipeline only; no model calls, no grades"
+}

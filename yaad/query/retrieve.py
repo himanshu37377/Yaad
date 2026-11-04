@@ -4,8 +4,9 @@ STOPWORDS = {"a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in
 
 # Words the plural folder must never touch: folding "news" to "new" would
 # retrieve unrelated "new X" units, which is exactly the noise folding
-# must not add.
-_FOLD_EXCEPTIONS = frozenset({"news"})
+# must not add. "-is"/"-us" endings are not plurals either ("analysis",
+# "this", "status") and must never be stemmed.
+_FOLD_EXCEPTIONS = frozenset({"news", "this"})
 
 
 def fold_term(term: str) -> str:
@@ -25,9 +26,61 @@ def fold_term(term: str) -> str:
         return word[:-2]
     if word.endswith(("ches", "shes")) and len(word) > 5:
         return word[:-2]
-    if word.endswith("s") and not word.endswith(("ss", "us")):
+    if word.endswith("s") and not word.endswith(("ss", "us", "is")):
         return word[:-1]
     return word
+
+
+# Minimal verb/noun fold map: two tight equivalence classes,
+# (quote/quoted, caterer/catering) plus the close/closes verb pair
+# (deadline/registration "close" vs "closes" in evidence). Applied at
+# query time by the hybrid keyword channel and the pipeline
+# classifier's overlap counting only; search() stays frozen. This is
+# not general synonym expansion: no other term gains match forms.
+WORD_FOLDS = {
+    "quote": ("quoted",),
+    "quoted": ("quote",),
+    "caterer": ("catering",),
+    "catering": ("caterer",),
+    "close": ("closes",),
+    "closes": ("close",),
+}
+
+
+def word_folds(term: str) -> list[str]:
+    """Extra match forms for one query term within the WORD_FOLDS class.
+
+    Looks up both the term and its singular fold so inflected forms
+    ("quotes", "caterers") reach the same class. Returns [] outside the
+    class."""
+    word = term.casefold()
+    variants: list[str] = []
+    for key in (word, fold_term(word)):
+        for variant in WORD_FOLDS.get(key, ()):
+            if variant != word and variant not in variants:
+                variants.append(variant)
+    return variants
+
+
+_SUBQUERY_SPLIT = re.compile(r"\band\b|\bwho\b", re.IGNORECASE)
+
+
+def split_subqueries(question: str) -> list[str]:
+    """Split a multi-part question on and/who clause boundaries.
+
+    Single-part questions come back as one clause, so their retrieval
+    path is unchanged. Empty clauses and clauses with no content terms
+    are dropped: they would retrieve nothing."""
+    clauses = []
+    for part in _SUBQUERY_SPLIT.split(question or ""):
+        text = part.strip()
+        if not text:
+            continue
+        terms = [term for term in re.findall(r"[\w-]+", text.casefold(), flags=re.UNICODE)
+                 if len(term) > 1 and term not in STOPWORDS]
+        if terms:
+            clauses.append(text)
+    return clauses
 
 
 def question_phrases(question: str) -> list[str]:

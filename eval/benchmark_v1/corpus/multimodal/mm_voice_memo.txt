@@ -1,0 +1,1 @@
+Benchmark V1 fixture multimodal/mm_voice_memo.txt. [file-kind: audio] Transcript: Arjun confirms the sound check at 9am. In this voice memo, Priya approves the fest budget of Rs 28,000.

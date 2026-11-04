@@ -1,8 +1,9 @@
 # Yaad evaluation traces
 
-Byte-exact outputs captured from real runs. No values were edited, except
-this note: `file` paths embed the generation machine's scratch directory
-(`/private/tmp/traces/corpus`), because Yaad stores absolute source paths.
+Byte-exact outputs captured from real runs, with one redaction: `file`
+paths originally embedded the generation machine's scratch directory and
+were replaced with portable `<project-root>/sample_files/…` placeholders,
+because Yaad stores absolute source paths. All other values are unedited.
 
 All traces below were generated on 2026-10-30 with cloud disabled
 (`YAAD_CLOUD_ENABLED=false`, no API key), so model spend was $0.
@@ -10,7 +11,11 @@ All traces below were generated on 2026-10-30 with cloud disabled
 ## How to regenerate
 
 ```sh
-cp -r yaad_cross_file_test /tmp/traces/corpus
+mkdir -p /tmp/traces/corpus
+cp sample_files/event_proposal.pdf sample_files/event_poster.png \
+   sample_files/organizer_notes.txt \
+   "sample_files/College_Event_Deadlines_and_Workshop_Topics.m4a" \
+   /tmp/traces/corpus/
 export YAAD_DB_PATH=/tmp/traces/yaad.sqlite3 YAAD_CLOUD_ENABLED=false
 yaad add-folder /tmp/traces/corpus
 yaad index                    # -> docs/traces/index-corpus.json
@@ -18,7 +23,10 @@ yaad ask "What is the registration fee?"       # -> docs/traces/ask-registration
 yaad ask "What was the keynote speaker's name?" # -> docs/traces/ask-abstention.json
 ```
 
-The corpus originals in `yaad_cross_file_test/` are never modified.
+Only the four core Autumn Fest files are copied (the two workshop
+notices in `sample_files/` postdate these traces). The `sample_files/`
+originals are never modified. For the current six-file demo, see the
+screenshots in `README.md`.
 
 ## Trace 1 — offline index (`index-corpus.json`)
 

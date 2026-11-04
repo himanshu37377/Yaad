@@ -1,0 +1,84 @@
+{
+  "arms": {
+    "production": {
+      "total": 72,
+      "passed": 63,
+      "accuracy": 0.875,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 10
+        },
+        "injection": {
+          "n": 6,
+          "passed": 5
+        },
+        "missing_evidence": {
+          "n": 8,
+          "passed": 8
+        },
+        "multi_doc": {
+          "n": 8,
+          "passed": 7
+        },
+        "multimodal": {
+          "n": 12,
+          "passed": 12
+        },
+        "near_dup": {
+          "n": 8,
+          "passed": 5
+        },
+        "paraphrase": {
+          "n": 10,
+          "passed": 10
+        },
+        "temporal": {
+          "n": 10,
+          "passed": 6
+        }
+      },
+      "failures": [
+        "J05",
+        "M03",
+        "N01",
+        "N02",
+        "N08",
+        "T01",
+        "T02",
+        "T07",
+        "T09"
+      ],
+      "retrieval": {
+        "recall_at_1": 0.7661290322580645,
+        "recall_at_1_n": 62,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 62,
+        "mrr": 0.9516129032258065,
+        "mrr_n": 62,
+        "hard_negative_pass": 0.9193548387096774,
+        "hard_negative_pass_n": 62
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 0.9444444444444444,
+      "citation_complete_n": 18,
+      "abstention_rate": 1.0,
+      "abstention_n": 8
+    }
+  },
+  "false_supported_rate": {
+    "production": 0.0
+  },
+  "meta": {
+    "benchmark": "v1",
+    "frozen": true,
+    "freeze_hash": "5583a64ca3261d670d2a3a0def4dd142fb8630aad42c4266d0b32ec2706048e5",
+    "cases": 72,
+    "offline": false,
+    "model": "muse-spark-1.3",
+    "max_spend_usd": 2.0,
+    "spent_usd": 0.217465,
+    "stopped": {}
+  }
+}

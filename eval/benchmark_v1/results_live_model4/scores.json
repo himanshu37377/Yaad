@@ -1,0 +1,91 @@
+{
+  "arms": {
+    "model": {
+      "total": 72,
+      "passed": 56,
+      "accuracy": 0.7777777777777778,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 9
+        },
+        "injection": {
+          "n": 6,
+          "passed": 6
+        },
+        "missing_evidence": {
+          "n": 8,
+          "passed": 8
+        },
+        "multi_doc": {
+          "n": 8,
+          "passed": 7
+        },
+        "multimodal": {
+          "n": 12,
+          "passed": 11
+        },
+        "near_dup": {
+          "n": 8,
+          "passed": 5
+        },
+        "paraphrase": {
+          "n": 10,
+          "passed": 8
+        },
+        "temporal": {
+          "n": 10,
+          "passed": 2
+        }
+      },
+      "failures": [
+        "C08",
+        "M03",
+        "V05",
+        "N02",
+        "N05",
+        "N08",
+        "P07",
+        "P09",
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T07",
+        "T08",
+        "T09",
+        "T10"
+      ],
+      "retrieval": {
+        "recall_at_1": 0.8467741935483871,
+        "recall_at_1_n": 62,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 62,
+        "mrr": 0.9919354838709677,
+        "mrr_n": 62,
+        "hard_negative_pass": 1.0,
+        "hard_negative_pass_n": 62
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 0.8888888888888888,
+      "citation_complete_n": 18,
+      "abstention_rate": 1.0,
+      "abstention_n": 8
+    }
+  },
+  "false_supported_rate": {
+    "model": 0.0
+  },
+  "meta": {
+    "benchmark": "v1",
+    "frozen": true,
+    "freeze_hash": "5583a64ca3261d670d2a3a0def4dd142fb8630aad42c4266d0b32ec2706048e5",
+    "cases": 72,
+    "offline": false,
+    "model": "muse-spark-1.3",
+    "max_spend_usd": 1.5,
+    "spent_usd": 0.113528,
+    "stopped": {}
+  }
+}

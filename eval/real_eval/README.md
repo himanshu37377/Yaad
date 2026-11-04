@@ -1,8 +1,9 @@
-# Real-model evaluation (prepared, not yet run)
+# Real-model evaluation (live run 2026-10-30; see `results/`)
 
 Measures actual Meta model quality through Yaad's complete pipeline.
-Deterministic tests do not measure this. **No live calls have been made
-for this evaluation.**
+Deterministic tests do not measure this. **Live run completed
+2026-10-30; see `results/` (transcript, report).** `results/` is
+local-only (gitignored); regenerate with an approved `--live` run.
 
 ## Dataset
 
@@ -57,11 +58,10 @@ correctness; answer correctness, citation validity (IDs resolve),
 unsupported claims, abstention. Each failure is attributed to a stage:
 source → units → records → validation → retrieval → synthesis.
 
-## Report template (fill after the live run)
+## Report (2026-10-30 live run)
 
-- Models + config: …
-- Calls / tokens / actual spend (from egress receipts): …
-- Full vs baseline per category: …
-- Failures with stage attribution: …
-- Limitations: single synthetic domain, TTS audio (upper bound for
-  ASR), one run (model variance unmeasured): …
+Full **5/8**, Baseline **3/8** (deterministic substring scorer; failures
+L2/L3/L5 vs L1–L5). See `results/report.md` for stage-attributed
+failures, config, and limits (single synthetic domain, TTS audio as an
+ASR upper bound, one run so model variance unmeasured). `results/` is
+local-only (gitignored).

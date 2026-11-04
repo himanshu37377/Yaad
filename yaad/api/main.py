@@ -9,8 +9,9 @@ from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from yaad.config import get_settings
 from yaad.db import Database
-from yaad.schemas import FolderRequest, FolderPickerRequest, FolderConsentRequest, IndexRequest, AskRequest, MemoryExtractRequest, MemoryFlagRequest
+from yaad.schemas import FeedbackRequest, FolderRequest, FolderPickerRequest, FolderConsentRequest, IndexRequest, AskRequest, MemoryExtractRequest, MemoryFlagRequest
 from yaad.llm import get_client, is_local
+from yaad.memory.auto import schedule_auto_memory, schedule_conversation_learning
 from yaad.memory.extract import run_extraction
 from yaad.memory.ledger import list_transitions
 from yaad.memory.records import answer_eligibility, resolving_supports
@@ -27,6 +28,22 @@ indexer = Indexer(db, settings)
 app = FastAPI(title="Yaad", description="Evidence-backed personal memory engine")
 UI = Path(__file__).parents[1] / "ui"
 app.mount("/static", StaticFiles(directory=UI), name="static")
+
+
+@app.middleware("http")
+async def _api_token_guard(request, call_next):
+    # Optional shared-token gate: active only when YAAD_API_TOKEN is set
+    # (required by the CLI for any non-loopback bind). Default loopback
+    # installs keep the zero-config local flow. Static UI assets and the
+    # shell page stay public so the browser can load and then call the
+    # API with the token from sessionStorage.
+    import os
+
+    token = os.getenv("YAAD_API_TOKEN", "")
+    if token and request.url.path.startswith("/api/"):
+        if request.headers.get("authorization", "") != f"Bearer {token}":
+            return Response("unauthorized", status_code=401, media_type="text/plain")
+    return await call_next(request)
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -95,11 +112,21 @@ def run_index(request: IndexRequest):
     if not _index_lock.acquire(blocking=False):
         raise HTTPException(409, "Indexing is already running. Wait for it to finish, then retry.")
     try:
-        return indexer.index_folder(request.folder_id)
+        result = indexer.index_folder(request.folder_id)
     except ValueError as exc:
         raise HTTPException(404, str(exc)) from exc
     finally:
         _index_lock.release()
+    # Learn in the background once new evidence exists; gates inside
+    # decide whether any model call is legitimate. Never blocks the
+    # indexing response and never raises into it.
+    if request.folder_id is not None:
+        schedule_auto_memory(db, settings, [request.folder_id])
+    else:
+        with db.connect() as con:
+            folder_ids = [row["id"] for row in con.execute("SELECT id FROM folders ORDER BY id")]
+        schedule_auto_memory(db, settings, folder_ids)
+    return result
 
 @app.get("/api/index/status")
 def index_status(folder_id: int | None = None):
@@ -166,14 +193,34 @@ def redescribe_photo(file_id: int):
     except RuntimeError as exc:
         raise HTTPException(409, str(exc)) from exc
 
+def _contained_source(path_value: str) -> Path | None:
+    """Resolved source path only when it still lives under a registered
+    folder: a DB row re-pointed (or symlinked) outside every consented
+    folder must not be served."""
+    try:
+        resolved = Path(path_value).expanduser().resolve()
+    except (OSError, RuntimeError):
+        return None
+    with db.connect() as con:
+        roots = [row["path"] for row in con.execute("SELECT path FROM folders")]
+    for root in roots:
+        try:
+            if resolved.is_relative_to(Path(root).expanduser().resolve()):
+                return resolved
+        except (OSError, RuntimeError):
+            continue
+    return None
+
+
 @app.get("/api/photos/{file_id}/preview")
 def photo_preview(file_id: int):
     with db.connect() as con:
         row = con.execute("SELECT path FROM files WHERE id=? AND kind='image'", (file_id,)).fetchone()
-    if not row or not Path(row["path"]).is_file():
+    resolved = _contained_source(row["path"]) if row else None
+    if resolved is None or not resolved.is_file():
         raise HTTPException(404, "Photo source is no longer available")
-    content_type = mimetypes.guess_type(row["path"])[0] or "application/octet-stream"
-    return FileResponse(row["path"], media_type=content_type)
+    content_type = mimetypes.guess_type(str(resolved))[0] or "application/octet-stream"
+    return FileResponse(str(resolved), media_type=content_type)
 
 @app.post("/api/ask")
 def ask(request: AskRequest):
@@ -182,6 +229,9 @@ def ask(request: AskRequest):
     result = answer_question(db, request.question, request.folder_id, settings, timings)
     timings["total_ms"] = round((time.perf_counter() - start) * 1000)
     result["timings"] = timings
+    # Statements can teach Yaad new durable facts; learning runs in the
+    # background and can never slow or break the answer above.
+    schedule_conversation_learning(db, settings, request.folder_id, request.question)
     return result
 
 @app.get("/api/evidence/{evidence_id}/preview")
@@ -194,18 +244,23 @@ def evidence_preview(evidence_id: str):
         locator = json.loads(row["locator"])
     except (TypeError, json.JSONDecodeError) as exc:
         raise HTTPException(422, "The stored source reference is invalid.") from exc
-    path = Path(row["path"])
-    if locator.get("type") == "pdf_page" and path.exists():
+    path = _contained_source(row["path"])
+    if path is not None and locator.get("type") == "pdf_page" and path.exists():
         try:
             return Response(render_page(str(path), locator["page"]), media_type="image/png")
         except Exception as exc:
             raise HTTPException(422, "Could not render source page") from exc
-    if locator.get("type") == "image" and path.exists():
-        return FileResponse(path, media_type="image/" + (path.suffix.lower().lstrip(".") if path.suffix.lower() != ".jpg" else "jpeg"))
-    if locator.get("type") == "audio_segment" and path.exists():
+    if path is not None and locator.get("type") == "image" and path.exists():
+        image_type = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                      ".webp": "image/webp", ".gif": "image/gif"}.get(
+                          path.suffix.lower(), "application/octet-stream")
+        return FileResponse(str(path), media_type=image_type)
+    if path is not None and locator.get("type") == "audio_segment" and path.exists():
         audio_type = {".wav":"audio/wav",".mp3":"audio/mpeg",".m4a":"audio/mp4",".ogg":"audio/ogg",".opus":"audio/ogg"}.get(path.suffix.lower(), "application/octet-stream")
-        return FileResponse(path, media_type=audio_type)
-    return {"file": str(path), "locator": locator, "quote": row["text"]}
+        return FileResponse(str(path), media_type=audio_type)
+    # Never disclose the absolute filesystem layout; the UI needs only
+    # the file name, locator, and quote for this fallback.
+    return {"file": Path(row["path"]).name, "locator": locator, "quote": row["text"]}
 
 @app.get("/api/egress")
 def egress(limit: int = Query(default=20, ge=1, le=100), offset: int = Query(default=0, ge=0)):
@@ -217,11 +272,11 @@ def egress(limit: int = Query(default=20, ge=1, le=100), offset: int = Query(def
     return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 @app.post("/api/feedback")
-def feedback(payload: dict):
+def feedback(payload: FeedbackRequest):
     # Feedback is local and minimal; no user text is forwarded to a model.
     with db.transaction() as con:
-        con.execute("CREATE TABLE IF NOT EXISTS feedback(id INTEGER PRIMARY KEY, evidence_id TEXT, helpful INTEGER, created_at TEXT DEFAULT CURRENT_TIMESTAMP)")
-        con.execute("INSERT INTO feedback(evidence_id,helpful) VALUES(?,?)", (payload.get("evidence_id"), int(bool(payload.get("helpful")))))
+        con.execute("INSERT INTO feedback(evidence_id,helpful) VALUES(?,?)",
+                    (payload.evidence_id, int(payload.helpful)))
     return {"ok": True}
 
 _memory_lock = threading.Lock()
@@ -230,9 +285,12 @@ _memory_lock = threading.Lock()
 def extract_memory(request: MemoryExtractRequest):
     """Run one extraction pass over a folder's evidence.
 
-    Explicit: never triggered by indexing. Cloud runs use consented evidence
-    and are paid; local runs use all folder evidence and are free. Rejected
-    candidates are reported in the response, never silently dropped."""
+    Manual/administrative path: Yaad also learns automatically in the
+    background after indexing, but this endpoint runs one pass now.
+    Both paths share the per-folder extraction guard, so they never
+    overlap. Cloud runs use consented evidence and are paid; local
+    runs use all folder evidence and are free. Rejected candidates
+    are reported in the response, never silently dropped."""
     if not _memory_lock.acquire(blocking=False):
         raise HTTPException(409, "Memory extraction is already running. Wait for it to finish, then retry.")
     try:
@@ -240,12 +298,18 @@ def extract_memory(request: MemoryExtractRequest):
             folder = con.execute("SELECT id FROM folders WHERE id=?", (request.folder_id,)).fetchone()
         if not folder:
             raise HTTPException(404, "Folder not found")
-        run_id = f"api-{uuid.uuid4().hex[:12]}"
+        from yaad.memory.auto import begin_folder_extraction, end_folder_extraction
+        if not begin_folder_extraction(request.folder_id):
+            raise HTTPException(409, "Memory extraction is already running for this folder (background learning). Wait for it to finish, then retry.")
         try:
-            summary = run_extraction(db, request.folder_id, run_id, settings, get_client(settings))
-        except RuntimeError as exc:
-            raise HTTPException(409, str(exc)) from exc
-        return {"run_id": run_id, "folder_id": request.folder_id, **summary}
+            run_id = f"api-{uuid.uuid4().hex[:12]}"
+            try:
+                summary = run_extraction(db, request.folder_id, run_id, settings, get_client(settings))
+            except RuntimeError as exc:
+                raise HTTPException(409, str(exc)) from exc
+            return {"run_id": run_id, "folder_id": request.folder_id, **summary}
+        finally:
+            end_folder_extraction(request.folder_id)
     finally:
         _memory_lock.release()
 
@@ -304,6 +368,18 @@ def memory_transitions(folder_id: int | None = None, record_id: int | None = Non
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
     return {"transitions": rows}
+
+
+@app.delete("/api/memory/{record_id}")
+def delete_memory(record_id: int):
+    """Remove one memory the user judges wrong. Evidence links and its
+    ledger history go with it (explicit user removal); document-backed
+    facts can be relearned by re-extracting."""
+    with db.transaction() as con:
+        cursor = con.execute("DELETE FROM memory_records WHERE id=?", (record_id,))
+        if cursor.rowcount == 0:
+            raise HTTPException(404, "Memory record not found")
+    return {"deleted": record_id}
 
 
 @app.post("/api/memory/{record_id}/flag")

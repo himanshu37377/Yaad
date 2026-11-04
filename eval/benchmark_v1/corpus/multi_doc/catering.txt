@@ -1,0 +1,1 @@
+Benchmark V1 fixture multi_doc/catering.txt. Spring Fest catering costs Rs 8,000.

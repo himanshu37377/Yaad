@@ -1,0 +1,198 @@
+{
+  "suite": "suite_multimodal.json",
+  "freeze": "2b0cdc879691213b",
+  "n": 3,
+  "traces": [
+    {
+      "id": "MM-1",
+      "question": "What is the latest confirmed venue for Autumn Fest?",
+      "expected_status": "conflict-or-superseded",
+      "pipeline_status": "answered",
+      "answer": "Autumn Fest 2026 will be held at Riverside Hall. Poster shows Autumn Fest at Grand Arena November 12.",
+      "citations": [
+        "mm_e1",
+        "mm_e2"
+      ],
+      "retrieval": {
+        "keyword": [
+          "mm_e1",
+          "mm_e2",
+          "mm_e3"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "mm_e1",
+        "mm_e2",
+        "mm_e3"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "change/detailed"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.7,
+          "detail": "3 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "3 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "answered"
+        }
+      ]
+    },
+    {
+      "id": "MM-2",
+      "question": "What was the original venue?",
+      "expected_status": "answered",
+      "pipeline_status": "not_found",
+      "answer": "Insufficient evidence to answer.",
+      "citations": [],
+      "retrieval": {
+        "keyword": [
+          "mm_e3"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "mm_e1"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "history/deep"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.6,
+          "detail": "1 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "not_found"
+        }
+      ]
+    },
+    {
+      "id": "MM-3",
+      "question": "Which source announced the venue change?",
+      "expected_status": "answered",
+      "pipeline_status": "not_found",
+      "answer": "Insufficient evidence to answer.",
+      "citations": [],
+      "retrieval": {
+        "keyword": [
+          "mm_e3"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "mm_e3"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "change/detailed"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.6,
+          "detail": "1 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "1 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "not_found"
+        }
+      ]
+    }
+  ],
+  "note": "dry-run: deterministic pipeline only; no model calls, no grades"
+}

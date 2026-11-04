@@ -247,10 +247,10 @@ def test_supersession_steps_down_older_claim_through_service(store):
                     date_value="", date_raw="", status="decided", key_phrase="venue hall",
                     evidence=[{"evidence_id": old_eid, "role": "supports",
                                "excerpt": "The venue is the old hall"}])
-    new = candidate(record_type="decision", title="Venue auditorium", detail="Venue is the new auditorium.",
+    new = candidate(record_type="decision", title="Venue auditorium", detail="Correction: Venue is the new auditorium.",
                     date_value="", date_raw="", status="decided", key_phrase="venue auditorium",
                     evidence=[{"evidence_id": new_eid, "role": "supports",
-                               "excerpt": "the venue is the new auditorium"},
+                               "excerpt": "Correction: the venue is the new auditorium"},
                               {"evidence_id": old_eid, "role": "supersedes",
                                "excerpt": "The venue is the old hall"}])
     run_extraction(database, folder_id, "run-1", settings, StubClient([old]))

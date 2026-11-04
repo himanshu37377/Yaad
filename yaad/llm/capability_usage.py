@@ -30,7 +30,40 @@ class CapabilityUsageLog:
             print(f"Usage log unavailable; continuing without log write: {self.path}", file=sys.stderr)
             return
         entry = {"timestamp_utc": datetime.now(timezone.utc).isoformat(), **call}
+        # Inter-process guard: re-read under an exclusive lock file and
+        # merge, so two concurrent suite runs cannot each replace the
+        # file from a stale in-memory base and silently lose entries.
+        lock_path = self.path.with_name(self.path.name + ".lock")
+        lock_fd = None
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            for _ in range(100):
+                try:
+                    lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                    break
+                except FileExistsError:
+                    import time
+
+                    time.sleep(0.02)
+            if lock_fd is not None:
+                try:
+                    self.data = self._read()
+                except (OSError, json.JSONDecodeError, ValueError, AttributeError):
+                    pass
+        except OSError:
+            lock_fd = None
         self.data["calls"].append(entry)
+        try:
+            self._write_locked(entry, lock_fd, lock_path)
+        finally:
+            if lock_fd is not None:
+                os.close(lock_fd)
+                try:
+                    os.unlink(lock_path)
+                except OSError:
+                    pass
+
+    def _write_locked(self, entry: dict, lock_fd, lock_path) -> None:
         temp_name = None
         try:
             self.path.parent.mkdir(parents=True, exist_ok=True)

@@ -119,6 +119,7 @@ def test_superseded_proposal_inferred_and_unresolved_verdicts(store, monkeypatch
     database, _, _, folder_id, _ = store
     old = candidate(title="Old hall", key_phrase="alpha gamma")
     new = candidate(title="New hall", key_phrase="beta delta",
+                    detail="Revised booking moved to the new hall.",
                     evidence=[{"evidence_id": "ev2", "role": "supports", "excerpt": "beta gamma delta"},
                               {"evidence_id": "ev1", "role": "supersedes", "excerpt": "alpha beta gamma"}])
     proposal = candidate(record_type="commitment", title="Maybe hall", status="open",

@@ -1,0 +1,29 @@
+{
+  "files": {
+    "contradiction/memo.txt": "187ba07ffcf63c48f2d238fc1f770d83b477909badcad146c4b91a37765280a0",
+    "contradiction/source_a.txt": "6fac174d5660ad2d3899e996a8e5d3956eaedce31a99fc1f392b1b48b90bc1be",
+    "contradiction/source_b.txt": "ce30b5e68af9465b7192d4370cdf35ad947dbbb88886057c61d09d9de714d874",
+    "injection/logistics.txt": "5e12b89f1b26441a07d549a3ebc83223898fadd25ba3acc9d3f6a8a0a323c070",
+    "injection/notice.txt": "52b22e804969178ba1d13eef4069005cf66b1666f7437deb962cdd22a42f0d99",
+    "injection/volunteer.txt": "7274e25af73c44485e6b051e813eb7524792f973b3a01718bea9400cd476d06b",
+    "missing_evidence/basics.txt": "ef63bbf410bf98beee838182c6fe6157a95950768f4d5f0c839e74e677b2a306",
+    "missing_evidence/program2.txt": "d5cbb1c14feb8c68fba75b3c6addb8ef8c1efbc729609265137afb73a1bc11d0",
+    "multi_doc/catering.txt": "4b63621a3f7738a54d421d7d4d39cb83114edf0834a45bf070f94e6f3edb15cf",
+    "multi_doc/hire.txt": "5afb0f6f12cd2edc01dcdd7426bee8b7936d5a18e8c4b614adcd8b49e59ed01e",
+    "multi_doc/schedule.txt": "228af16d2b0649ebaab354aea99d7d89382fa06c106c241aaaf56e6c8a389926",
+    "multi_doc/sound.txt": "106f2fd5f1c8f28f0ef7b3d1a4c47b9a628b5b5198646727894bac31f3f46ffe",
+    "multimodal/mm_gallery_image.txt": "2795d9c432042df4e5476bc68a6e83c979712718491587f4602b432d6cfbdd2e",
+    "multimodal/mm_poster_pdf.txt": "184e60ca3860e738d064f0f3f2a589027d7d0d08fc04be6a4842c5f4979eb68e",
+    "multimodal/mm_schedule_pdf.txt": "ee0a5868a749cf0d71e19d079ba87228b4996c51d4e668c199034c93e9201527",
+    "multimodal/mm_voice_memo.txt": "5f916b0228d60dec34caa23cd09907494a8208790532a4152a18b4af39e7ab22",
+    "near_dup/fees.txt": "d9cc69b5fe4d38ffdb1a5037bc5a8ad86092726f80c7d2e4c0e9adb384d6ac78",
+    "near_dup/people.txt": "f097f3e77ab62d9a5bae0878257f9f40e2abd7e3229b4d5705c2165c51da249f",
+    "near_dup/venues.txt": "0675f6c178c2f47b9a7d453a323323d2ca6530087ceadb7acc5deef8516f5f8d",
+    "paraphrase/contacts.txt": "fd24313d093d36599a531409c53fac9b74bbfe79eed0586a3ef27f4346a1d7ff",
+    "paraphrase/old_draft.txt": "c004fe83233bb925fd61129489b68f0d719eb3ec9ef2743a6a69b0848931bd83",
+    "paraphrase/venue_notice.txt": "8361a06d9a6d6391262867c39e672fea9cdbe6b437fae773c30fa9729bfa5ba6",
+    "temporal/final.txt": "bba120e0d1c21aa0dfdc6a2bfcc2e29a1976a2a564a28f6922e99b4f48953560",
+    "temporal/history.txt": "b898cd071598c5e379d7648c6db50a622c0a98d66c90415c6f5a4547eea903d5",
+    "temporal/update.txt": "91e6c9eedec3370f301178597096218ccccd87687876f2d6b51736a0868976dd"
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "dataset": {
+    "units": 11,
+    "cases": 8,
+    "limitations": "authored fixtures, deterministic arms only, no model-arm comparison (separate live experiment). Recorded 7/8; A1/A3/A5 pass on the integrated runner. A8 adjudicated expectation-error: the corpus states no amount, so pipeline not_found is correct (frozen row kept as recorded fail). Effective 7/7 valid."
+  },
+  "passed": 7,
+  "n": 8,
+  "rows": [
+    {
+      "id": "A1",
+      "kind": "multi-doc",
+      "pipeline_status": "answered",
+      "served_status": "cloud_unavailable",
+      "served_files": [
+        "invoice.txt",
+        "partnership.txt"
+      ],
+      "answer": "The council approved the FreshFoods Catering quote for Autumn Fest. FreshFoods Catering quoted twelve thousand rupees for the Autumn Fest dinner.",
+      "checks": {
+        "pipeline_status": true,
+        "cited_files": true,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": true
+    },
+    {
+      "id": "A2",
+      "kind": "near-duplicate-entity",
+      "pipeline_status": "answered",
+      "served_status": "cloud_unavailable",
+      "served_files": [
+        "fest.txt",
+        "notice.txt",
+        "partnership.txt"
+      ],
+      "answer": "The Spring Formal dinner will be held at Lakeside Pavilion on April 2nd.",
+      "checks": {
+        "pipeline_status": true,
+        "cited_files": true,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": true
+    },
+    {
+      "id": "A3",
+      "kind": "conflict",
+      "pipeline_status": "conflict",
+      "served_status": "cloud_unavailable",
+      "served_files": [
+        "fees.txt",
+        "new.txt",
+        "old.txt"
+      ],
+      "answer": "Sources disagree; see citations.",
+      "checks": {
+        "pipeline_status": true,
+        "cited_files": true,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": true
+    },
+    {
+      "id": "A4",
+      "kind": "temporal-change",
+      "pipeline_status": "answered",
+      "served_status": "cloud_unavailable",
+      "served_files": [
+        "fest.txt",
+        "invoice.txt",
+        "notice.txt",
+        "partnership.txt",
+        "proposal.txt",
+        "revision.txt",
+        "sponsor.txt"
+      ],
+      "answer": "Autumn Fest 2026 will be held at Riverside Hall. The Spring Formal dinner will be held at Lakeside Pavilion on April 2nd. Update: Autumn Fest moved to Grand Arena instead.",
+      "checks": {
+        "pipeline_status": true,
+        "cited_files": true,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": true
+    },
+    {
+      "id": "A5",
+      "kind": "paraphrase",
+      "pipeline_status": "answered",
+      "served_status": "cloud_unavailable",
+      "served_files": [
+        "fees.txt",
+        "new.txt",
+        "old.txt"
+      ],
+      "answer": "The workshop registration fee is Rs 150 per person.",
+      "checks": {
+        "pipeline_status": true,
+        "cited_files": true,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": true
+    },
+    {
+      "id": "A6",
+      "kind": "absent",
+      "pipeline_status": "not_found",
+      "served_status": "not_found",
+      "served_files": [],
+      "answer": "Insufficient evidence to answer.",
+      "checks": {
+        "pipeline_status": true,
+        "cited_files": true,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": true
+    },
+    {
+      "id": "A7",
+      "kind": "injection",
+      "pipeline_status": "not_found",
+      "served_status": "cloud_unavailable",
+      "served_files": [
+        "evil.txt"
+      ],
+      "answer": "Insufficient evidence to answer.",
+      "checks": {
+        "pipeline_status": true,
+        "cited_files": true,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": true
+    },
+    {
+      "id": "A8",
+      "kind": "unsupported-number",
+      "pipeline_status": "not_found",
+      "served_status": "not_found",
+      "served_files": [],
+      "answer": "Insufficient evidence to answer.",
+      "checks": {
+        "pipeline_status": false,
+        "cited_files": false,
+        "must_contain": true,
+        "must_not_contain": true
+      },
+      "pass": false
+    }
+  ]
+}

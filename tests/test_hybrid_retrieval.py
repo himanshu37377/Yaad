@@ -238,10 +238,13 @@ def test_neutrality_background_match_preserves_twin(tmp_path):
 def test_neutrality_phantom_value_and_invented_title(tmp_path):
     shop = Store(tmp_path / "n2.sqlite3")
     shop.add_file("a.txt", [("ev_a", "The registration fee is Rs 150")])
-    shop.add_file("b.txt", [("ev_b", "The old note is archived")])
+    # The would-be phantom is grounded in its own note (intake now
+    # rejects phantom statements outright); neutrality is about the
+    # irrelevant record not polluting the fee answer either way.
+    shop.add_file("b.txt", [("ev_b", "Old note archived: the 2020 grant was Rs 999")])
     shop.add_records("run-1", [candidate(
-        "Registration fee history", "note archived", [("ev_b", "old note is archived")],
-        detail="Registration fee history: Rs 999 in 2020",
+        "Registration fee history", "note archived", [("ev_b", "note archived")],
+        detail="Note archived: grant Rs 999 in 2020",
         record_type="decision", status="decided", date_value=None, date_raw=None)])
     twin = Store(tmp_path / "n2t.sqlite3")
     twin.add_file("a.txt", [("ev_a", "The registration fee is Rs 150")])

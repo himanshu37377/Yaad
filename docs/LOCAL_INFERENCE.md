@@ -227,7 +227,7 @@ cloud client, even on failures, and there is no silent fallback.
 1. On a 24 GB+ machine: `ollama pull muse-glimmer:30b`, then ask it
    one question via `ollama run muse-glimmer:30b`.
 2. On a scratch DB with cloud disabled and no API key:
-   index the `yaad_cross_file_test` corpus, run one memory extraction,
+   index the `sample_files` demo corpus, run one memory extraction,
    ask one corroboration question.
 3. Assert: statuses are `answered`/`conflict` (not `local_unavailable`),
    every claim cites retrieved evidence, and the egress API shows only

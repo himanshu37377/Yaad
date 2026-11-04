@@ -9,6 +9,10 @@ Method: code inspection plus disposable read-only probes (`/tmp`, no
 production writes, no model spend). All quoted behaviors were measured,
 not inferred.
 
+Note: references to `VALIDATION_RESULTS.md` are internal working notes
+not shipped with this repo; this file is the preserved Oct 2026 design
+record.
+
 ## 1. Background and scope
 
 Evidence-Verified Relationships fixed the G3 false-*conflict* override:

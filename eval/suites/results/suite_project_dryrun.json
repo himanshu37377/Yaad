@@ -1,0 +1,267 @@
+{
+  "suite": "suite_project.json",
+  "freeze": "380565ef413c594b",
+  "n": 4,
+  "traces": [
+    {
+      "id": "PJ-1",
+      "question": "When is the sprint demo?",
+      "expected_status": "conflict-or-superseded",
+      "pipeline_status": "answered",
+      "answer": "Sprint demo is scheduled Friday 3 PM with Priya presenting. Sprint demo moved to Friday 5 PM; Priya still presenting.",
+      "citations": [
+        "pj_e1",
+        "pj_e3"
+      ],
+      "retrieval": {
+        "keyword": [
+          "pj_e1",
+          "pj_e3"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "pj_e1",
+        "pj_e3"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.7,
+          "detail": "2 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "answered"
+        }
+      ]
+    },
+    {
+      "id": "PJ-2",
+      "question": "Who is presenting the sprint demo?",
+      "expected_status": "answered",
+      "pipeline_status": "answered",
+      "answer": "Sprint demo is scheduled Friday 3 PM with Priya presenting. Sprint demo moved to Friday 5 PM; Priya still presenting.",
+      "citations": [
+        "pj_e1",
+        "pj_e3"
+      ],
+      "retrieval": {
+        "keyword": [
+          "pj_e1",
+          "pj_e3"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "pj_e1",
+        "pj_e3"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 1.3,
+          "detail": "2 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "answered"
+        }
+      ]
+    },
+    {
+      "id": "PJ-3",
+      "question": "Is the Sunday deploy window still approved?",
+      "expected_status": "conflict-or-superseded",
+      "pipeline_status": "answered",
+      "answer": "Deploy window approved for Sunday 2 AM by the release team. Deploy window cancelled until load tests pass.",
+      "citations": [
+        "pj_e2",
+        "pj_e4"
+      ],
+      "retrieval": {
+        "keyword": [
+          "pj_e2",
+          "pj_e3",
+          "pj_e4"
+        ],
+        "memory": []
+      },
+      "relevant": [
+        "pj_e2",
+        "pj_e4"
+      ],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.6,
+          "detail": "3 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "3 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "answered"
+        }
+      ]
+    },
+    {
+      "id": "PJ-4",
+      "question": "Who owns the deploy rollback?",
+      "expected_status": "not_found",
+      "pipeline_status": "not_found",
+      "answer": "Insufficient evidence to answer.",
+      "citations": [],
+      "retrieval": {
+        "keyword": [
+          "pj_e4",
+          "pj_e2"
+        ],
+        "memory": []
+      },
+      "relevant": [],
+      "stages": [
+        {
+          "stage": "query_understanding",
+          "model": false,
+          "ms": 0.0,
+          "detail": "factoid/simple"
+        },
+        {
+          "stage": "retrieval",
+          "model": false,
+          "ms": 0.6,
+          "detail": "2 rows"
+        },
+        {
+          "stage": "evidence_classification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "2 labels"
+        },
+        {
+          "stage": "chronology",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 events conflict=False"
+        },
+        {
+          "stage": "candidate_generation",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 claims"
+        },
+        {
+          "stage": "verification",
+          "model": false,
+          "ms": 0.0,
+          "detail": "0 verdicts"
+        },
+        {
+          "stage": "final_construction",
+          "model": false,
+          "ms": 0.0,
+          "detail": "not_found"
+        }
+      ]
+    }
+  ],
+  "note": "dry-run: deterministic pipeline only; no model calls, no grades"
+}

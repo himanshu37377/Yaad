@@ -1,0 +1,46 @@
+{
+  "arms": {
+    "production": {
+      "total": 10,
+      "passed": 10,
+      "accuracy": 1.0,
+      "by_category": {
+        "contradiction": {
+          "n": 10,
+          "passed": 10
+        }
+      },
+      "failures": [],
+      "retrieval": {
+        "recall_at_1": 0.55,
+        "recall_at_1_n": 10,
+        "recall_at_5": 1.0,
+        "recall_at_5_n": 10,
+        "mrr": 1.0,
+        "mrr_n": 10,
+        "hard_negative_pass": 1.0,
+        "hard_negative_pass_n": 10
+      },
+      "citation_resolves_rate": 1.0,
+      "citation_contained_rate": 1.0,
+      "citation_complete_rate": 1.0,
+      "citation_complete_n": 10,
+      "abstention_rate": null,
+      "abstention_n": 0
+    }
+  },
+  "false_supported_rate": {
+    "production": null
+  },
+  "meta": {
+    "benchmark": "v1",
+    "frozen": true,
+    "freeze_hash": "5583a64ca3261d670d2a3a0def4dd142fb8630aad42c4266d0b32ec2706048e5",
+    "cases": 72,
+    "offline": false,
+    "model": "muse-spark-1.3",
+    "max_spend_usd": 0.3,
+    "spent_usd": 0.035259,
+    "stopped": {}
+  }
+}

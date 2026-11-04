@@ -75,7 +75,7 @@ CASES = [
     ("FN fee disjoint", "dup",
      [("Fee persons", "decision", "explicit", None, None, "150 per person",
        [("u11", "150 per person fee")]),
-      ("Fee rupee 2", "decision", "explicit", None, None, "150 rupee registration",
+      ("Fee rupee registration", "decision", "explicit", None, None, "150 rupee registration",
        [("u11", "150 rupee registration")])],
      {"u11": "150 per person fee; 150 rupee registration"}, False),
     ("N1 total vs line", "distinct",

@@ -23,7 +23,7 @@ def test_venue_record_cannot_answer_budget_question(tmp_path):
         "Autumn Fest venue Riverside Hall", "autumn fest venue",
         [("ev_a", "Autumn Fest venue is Riverside Hall")],
         record_type="decision", status="decided", date_value=None, date_raw=None,
-        detail="Autumn Fest venue is Riverside Hall on October 5, 2027.")])
+        detail="Autumn Fest venue is Riverside Hall on October 5.")])
     result = store.ask("What is the Autumn Fest budget?")
     assert result["status"] in {"unverified", "not_found", "cloud_unavailable"}
     assert result["memory"]["claims"] == []
@@ -48,23 +48,23 @@ def test_budget_record_still_answers_budget_question(tmp_path):
 
 def _deadline_chain(path, final_kind="explicit"):
     store = Store(path)
-    store.add_file("a.txt", [("ev_a", "Registration deadline is March 1, 2027 for Spring Fest")])
-    store.add_file("b.txt", [("ev_b", "Registration deadline is April 2, 2027 for Spring Fest")])
-    store.add_file("c.txt", [("ev_c", "Registration deadline is April 9, 2027 for Spring Fest")])
+    store.add_file("a.txt", [("ev_a", "Original: Registration deadline is March 1, 2027 for Spring Fest")])
+    store.add_file("b.txt", [("ev_b", "Updated: Registration deadline is April 2, 2027 for Spring Fest")])
+    store.add_file("c.txt", [("ev_c", "Final: Registration deadline is April 9, 2027 for Spring Fest")])
     store.add_records("run-1", [
         candidate("Deadline March", "registration deadline",
-                  [("ev_a", "Registration deadline is March 1, 2027")],
+                  [("ev_a", "Original: Registration deadline is March 1, 2027")],
                   date_value="2027-03-01", date_raw="March 1, 2027",
-                  detail="Registration deadline is March 1, 2027 for Spring Fest"),
+                  detail="Original: registration deadline is March 1, 2027 for Spring Fest"),
         candidate("Deadline April 2", "registration deadline",
-                  [("ev_b", "Registration deadline is April 2, 2027")],
+                  [("ev_b", "Updated: Registration deadline is April 2, 2027")],
                   date_value="2027-04-02", date_raw="April 2, 2027",
-                  detail="Registration deadline is April 2, 2027 for Spring Fest"),
+                  detail="Updated: registration deadline is April 2, 2027 for Spring Fest"),
         candidate("Deadline April 9", "registration deadline",
-                  [("ev_c", "Registration deadline is April 9, 2027")],
+                  [("ev_c", "Final: Registration deadline is April 9, 2027")],
                   date_value="2027-04-09", date_raw="April 9, 2027",
                   statement_kind=final_kind, status="open",
-                  detail="Registration deadline is April 9, 2027 for Spring Fest"),
+                  detail="Final: registration deadline is April 9, 2027 for Spring Fest"),
     ])
     with store.db.transaction() as con:
         con.execute("INSERT INTO memory_record_evidence(record_id,evidence_id,role,excerpt)"

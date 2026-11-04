@@ -3,13 +3,48 @@ import re
 import time
 from pathlib import Path
 from yaad.config import Settings, get_settings
+from yaad.memory.records import grounding_numbers, states_dispute
+from yaad.memory.relationships import (
+    CURRENCY_TOKENS,
+    MONTHS,
+    REVISION_TOKENS,
+    WEEKDAYS,
+)
+
+# Editorial/calendar vocabulary asserts no entity (same exclusion as
+# the memory layer): claims may open with "Revised ..." freely.
+_EDITORIAL_TOKENS = (REVISION_TOKENS | MONTHS | WEEKDAYS | CURRENCY_TOKENS
+                     | {"proposed", "proposal", "confirmed", "approved", "decided"})
 from yaad.privacy.masking import is_sensitive
-from yaad.query.retrieve import STOPWORDS, search
-from yaad.query.photos import _question_hits, _rank_photos, all_photos_intent, photo_intent, photo_value_intent, search_photos, list_photos
-from yaad.query.memory_answer import changes_listing_response, contract_claims, fetch_support_rows, historical_response, memory_pseudo_values, plan_memory, record_ids_by_evidence, status_listing_response, synthesize, unvalidated_amount_rivalry
+from yaad.query.retrieve import STOPWORDS, fold_term, search
+from yaad.query.photos import _question_hits, _rank_photos, all_photos_intent, annotate_with_compare, photo_intent, photo_value_intent, search_photos, list_photos
+from yaad.query.memory_answer import changes_listing_response, content_terms, contract_claims, fetch_support_rows, historical_response, memory_pseudo_values, plan_memory, record_ids_by_evidence, status_listing_response, synthesize, unvalidated_amount_rivalry
+
+# Output budget for the review spend estimate. Review cost is
+# output-dominated (a ~1200-char structured answer plus claims);
+# an input-only estimate slips output-heavy calls under the global
+# cap (live-measured: $0.0017 actual vs $0.0001 cap). 600 matches
+# the compare path's output leg and the schema's real max.
+REVIEW_EXPECTED_OUTPUT_TOKENS = 600
 
 NO_MEMORY = {"used": False, "record_ids": [], "claims": [], "context_claims": [],
              "conflicts": [], "conflict_validations": []}
+
+# Strict-mode answer-review schema (module-level so the offline
+# strict-schema gate covers it; every property key is required).
+ANSWER_REVIEW_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "status": {"type": "string", "enum": ["answered", "conflict", "partial", "unverified"]},
+        "answer": {"type": "string"},
+        "claims": {"type": "array", "items": {"type": "object", "properties": {
+            "claim": {"type": "string"},
+            "evidence_ids": {"type": "array", "items": {"type": "string"}},
+        }, "required": ["claim", "evidence_ids"], "additionalProperties": False}},
+    },
+    "required": ["status", "answer", "claims"],
+    "additionalProperties": False,
+}
 
 DATE_PATTERNS = [
     re.compile(r"\b\d{4}-\d{1,2}-\d{1,2}\b"),
@@ -18,8 +53,8 @@ DATE_PATTERNS = [
 ]
 
 AMOUNT_PATTERNS = [
-    re.compile(r"(?:INR|USD|EUR|\$|₹|Rs\.?|rupees?)\s*\d[\d,]*(?:\.\d{1,2})?", re.I),
-    re.compile(r"\d[\d,]*(?:\.\d{1,2})?\s*(?:INR|USD|EUR|\$|₹|Rs\.?|rupees?)", re.I),
+    re.compile(r"(?:INR|USD|EUR|GBP|\$|₹|€|£|Rs\.?|rupees?)\s*\d[\d,]*(?:\.\d+)?", re.I),
+    re.compile(r"\d[\d,]*(?:\.\d+)?\s*(?:INR|USD|EUR|GBP|\$|₹|€|£|Rs\.?|rupees?)", re.I),
 ]
 
 CROSS_FILE_HINTS = ("corroborat", "other file", "other source", "elsewhere",
@@ -188,6 +223,50 @@ def _explicitly_undecided(question, answer, rows, cited) -> bool:
                for row in rows)
 
 
+def _distinctive_grounded(text: str, cited_text: str,
+                          exempt_sentence_initial: bool = False) -> bool:
+    """Every proper noun and number a text asserts appears in the
+    cited text. Paraphrase-safe (case-folded containment over the full
+    token set, spelled-out numbers honored); invention-unsafe by
+    construction: a name or value from nowhere has nothing to match.
+    Free prose may exempt sentence-initial tokens: capitalization by
+    position ("Sources disagree...") asserts no name. Structured
+    claims get no exemption -- their first token is usually the
+    subject entity itself."""
+    cited_tokens = {fold_term(word) for word in
+                    re.findall(r"[\w-]+", cited_text.casefold(), flags=re.UNICODE)}
+    sentences = re.split(r"(?<=[.!?])\s+", text or "") if exempt_sentence_initial else [text or ""]
+    for sentence in sentences:
+        for index, token in enumerate(re.findall(r"[\w-]+", sentence, flags=re.UNICODE)):
+            if exempt_sentence_initial and index == 0:
+                continue
+            if len(token) > 1 and token[0].isupper() \
+                    and token.casefold() not in STOPWORDS \
+                    and token.casefold() not in _EDITORIAL_TOKENS \
+                    and fold_term(token) not in cited_tokens:
+                return False
+    return grounding_numbers(text) <= grounding_numbers(cited_text)
+
+
+def _claim_text_is_grounded(claim: str, cited_text: str) -> bool:
+    """Deterministic entailment floor for one reviewed claim: the
+    distinctive-token check plus at least half of the claim's
+    morphology-folded content words traceable to its cited units.
+    Paraphrase passes (shared matter words, renamed verbs); a claim
+    whose citations merely exist but do not support it does not. A
+    floor, not a proof: it removes unsupported claims, it cannot
+    certify the ones that remain."""
+    if not cited_text.strip():
+        return False
+    if not _distinctive_grounded(claim, cited_text):
+        return False
+    claim_words = {fold_term(word) for word in content_terms(claim)}
+    if not claim_words:
+        return True
+    cited_words = {fold_term(word) for word in content_terms(cited_text)}
+    return len(claim_words & cited_words) * 2 >= len(claim_words)
+
+
 def _semantic_review(db, question, rows, settings, tainted=frozenset()):
     from yaad.llm import is_local
     local = is_local(settings)
@@ -196,19 +275,7 @@ def _semantic_review(db, question, rows, settings, tainted=frozenset()):
     if not local and (not settings.cloud_enabled
                       or not all(bool(row["folder_cloud_consent"]) for row in rows)):
         return None
-    schema = {
-        "type": "object",
-        "properties": {
-            "status": {"type": "string", "enum": ["answered", "conflict", "partial", "unverified"]},
-            "answer": {"type": "string"},
-            "claims": {"type": "array", "items": {"type": "object", "properties": {
-                "claim": {"type": "string"},
-                "evidence_ids": {"type": "array", "items": {"type": "string"}},
-            }, "required": ["claim", "evidence_ids"], "additionalProperties": False}},
-        },
-        "required": ["status", "answer", "claims"],
-        "additionalProperties": False,
-    }
+    schema = ANSWER_REVIEW_SCHEMA
     source = []
     for row in rows:
         try:
@@ -220,10 +287,46 @@ def _semantic_review(db, question, rows, settings, tainted=frozenset()):
                        "historical": row["evidence_id"] in tainted})
     if not source:
         return None
+    # Evidence-side injection screening: units carrying instruction
+    # markers never reach the model (the quarantine helpers previously
+    # had no caller). Grounding below still uses original texts.
+    from yaad.privacy.masking import quarantine_evidence
+    source, _quarantine = quarantine_evidence(source)
+    if not source:
+        return None
+    redacted_spans = 0
+    if not local:
+        # PII redaction on every egress-bound copy, unconditionally: the
+        # model sees masked identifiers, while grounding below still
+        # checks the original indexed text. (Gating on is_sensitive let
+        # emails/phones in unflagged excerpts ship verbatim.) Local
+        # requests stay verbatim (no egress).
+        from yaad.privacy.masking import redact_text
+        for item in source:
+            item["text"], masked = redact_text(item["text"])
+            redacted_spans += masked
     egress_id = None
     client = None
     try:
         from yaad.llm import get_client
+        if not local:
+            # Spend gate, checked before the request exists: the
+            # per-review ceiling, then the global cap. A refusal
+            # degrades to the honest unverifiable path, never to
+            # another provider.
+            from yaad.llm.meta_config import estimate_text_cost_usd, spend_refusal
+            estimate = estimate_text_cost_usd(
+                settings.model,
+                {"input_tokens": sum(len(item["text"]) for item in source) // 4,
+                 "output_tokens": REVIEW_EXPECTED_OUTPUT_TOKENS})
+            ceiling = float(getattr(settings, "review_max_spend_usd", 0.0) or 0.0)
+            if 0 < ceiling < estimate:
+                raise RuntimeError(
+                    f"answer review refused: estimated input cost ${estimate:.4f} "
+                    f"exceeds per-review ceiling ${ceiling}")
+            refusal = spend_refusal(db, settings, estimate)
+            if refusal:
+                raise RuntimeError(f"answer review refused: {refusal}")
         client = get_client(settings)
         try:
             result = client.reason_json([{"role": "user", "content": json.dumps({
@@ -234,7 +337,7 @@ def _semantic_review(db, question, rows, settings, tainted=frozenset()):
                                                 "Cite every factual claim with the supplied evidence IDs.",
                                                 "Do not treat README or test-guide files as authoritative when an original PDF, DOCX, TXT, or image directly supports a fact.",
                                                 "Dates for different milestones are not contradictions; name what each date describes.",
-                                                "If sources truly disagree about the same fact, explain the disagreement and cite both.",
+                                                "If sources truly disagree about the same fact, explain the disagreement, cite both, and use status `conflict`.",
                                                 "If the sources explicitly state that a decision is undecided, pending, or to be determined, report that as the answer with status answered: an explicit 'not decided' is a supported answer, not insufficient evidence.",
                                                 "If some parts of a multi-part question are supported by evidence while other parts have no supporting evidence either way, use status partial, answer the supported parts, and say plainly which parts lack evidence.",
                                                 "Sources marked historical record outdated information; never present them as current facts.",
@@ -248,18 +351,20 @@ def _semantic_review(db, question, rows, settings, tainted=frozenset()):
                             status_code,success,duration_ms,input_tokens,output_tokens,cached_tokens,estimated_cost_usd,error_code)
                             VALUES(NULL,NULL,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                             ("semantic answer review", info.get("provider", "Meta Model API"),
-                             info.get("model", settings.model), sum(len(row["text"][:1200].encode("utf-8")) for row in rows),
+                             info.get("model", settings.model), sum(len(item["text"].encode("utf-8")) for item in source),
                              f"retrieved text excerpts from {len({row['file_id'] for row in rows})} "
-                             f"{'local' if local else 'consented'} source(s)",
+                             f"{'local' if local else 'consented'} source(s)"
+                             + (f", PII redacted ({redacted_spans} spans)" if redacted_spans else ""),
                              info.get("status_code"), None if info.get("success") is None else int(info["success"]),
                              info.get("duration_ms"), info.get("input_tokens"), info.get("output_tokens"),
                              info.get("cached_tokens"), info.get("estimated_cost_usd"), info.get("error_code")))
             egress_id = cursor.lastrowid
-        allowed = {row["evidence_id"] for row in rows}
+        # Only evidence actually sent to the model may be cited: rows
+        # dropped above (unparseable locator) never reached the model.
+        allowed = {item["evidence_id"] for item in source}
         claims = result.get("claims")
         if not isinstance(claims, list):
             raise ValueError("Missing claims in structured answer")
-        cited = []
         valid_claims = []
         for claim in claims:
             ids = claim.get("evidence_ids", []) if isinstance(claim, dict) else []
@@ -268,8 +373,33 @@ def _semantic_review(db, question, rows, settings, tainted=frozenset()):
             if not str(claim.get("claim", "")).strip():
                 raise ValueError("Answer claim was empty")
             valid_claims.append(claim)
-            cited.extend(ids)
-        cited = list(dict.fromkeys(cited))
+        # A citation ID that merely exists proves nothing: each claim
+        # must also be supported by the text of the units it cites.
+        # Unsupported claims are dropped, never served; when none
+        # survive, the status checks below settle on unverified.
+        from yaad.query.verify import CONTRADICTED, deterministic_check
+        text_by_id = {row["evidence_id"]: row["text"] for row in rows
+                      if row["evidence_id"] in allowed}
+        grounded_claims, dropped_claims = [], 0
+        for claim in valid_claims:
+            cited_text = "\n".join(text_by_id[eid] for eid in claim["evidence_ids"]
+                                   if eid in text_by_id)
+            if not _claim_text_is_grounded(str(claim.get("claim", "")), cited_text):
+                dropped_claims += 1
+                continue
+            # Entailment veto on top of the lexical floor: a claim that
+            # passes the floor but contradicts its own citations (prompt
+            # injection, swapped numbers/dates, negation flip) is dropped.
+            # Insufficient verdicts are kept -- the floor already spoke.
+            verdict, _ = deterministic_check(
+                str(claim.get("claim", "")),
+                [text_by_id[eid] for eid in claim["evidence_ids"] if eid in text_by_id])
+            if verdict == CONTRADICTED:
+                dropped_claims += 1
+                continue
+            grounded_claims.append(claim)
+        cited = list(dict.fromkeys(eid for claim in grounded_claims
+                                   for eid in claim["evidence_ids"]))
         status = result.get("status")
         if status in {"answered", "partial"} and (not cited or not valid_claims or not result.get("answer", "").strip()):
             status = "unverified"
@@ -279,8 +409,24 @@ def _semantic_review(db, question, rows, settings, tainted=frozenset()):
             file_ids = {row["file_id"] for row in rows if row["evidence_id"] in cited}
             if len(file_ids) < 2:
                 status = "unverified"
+        if status in {"answered", "partial", "conflict"} and cited:
+            # The prose is served as fact too: it may only assert
+            # names and numbers traceable to the surviving claims'
+            # cited units, whatever the claims themselves established.
+            surviving_text = "\n".join(text_by_id[eid] for eid in cited)
+            if not _distinctive_grounded(result.get("answer", ""), surviving_text,
+                                         exempt_sentence_initial=True):
+                status = "unverified"
+        if status == "answered" and states_dispute("", result.get("answer", "")):
+            # A dispute description is a conflict even when the model
+            # labeled it answered -- but only on the same two-file bar
+            # as a reviewed conflict. Downgrades above keep precedence.
+            cited_files = {row["file_id"] for row in rows if row["evidence_id"] in cited}
+            if len(cited_files) >= 2:
+                status = "conflict"
         return {"status": status if status in {"answered", "conflict", "partial", "unverified"} else "unverified",
-                "answer": result.get("answer", "")[:1200], "evidence_ids": cited, "egress_id": egress_id}
+                "answer": result.get("answer", "")[:1200], "evidence_ids": cited,
+                "egress_id": egress_id, "dropped_claims": dropped_claims}
     except Exception:
         info = getattr(client, "last_call", {}) if client else {}
         status_code = info.get("status_code")
@@ -396,6 +542,78 @@ def _photo_disclosure(db, photos: list[dict]) -> list[dict]:
              "to": call["provider"], "model": call["model"], "when": call["ts"]} for call in calls]
 
 
+def _maybe_image_compare(db, question, folder_id, memory, settings):
+    """Advisory-only joint image compare for one validated photo conflict.
+
+    Returns (advisory_or_None, compare_egress_id_or_None). Never
+    raises: every refusal or failure yields (None, None) and the
+    answer proceeds exactly as today. Gating mirrors the verify and
+    review paths: per-call ceiling first, then the global ledger cap,
+    before the client is constructed (the executor re-checks both
+    inside); local mode is the $0 path, cloud needs the switch, a key,
+    and live folder consent.
+    """
+    from yaad.llm import get_client, is_local
+    from yaad.memory.multimodal import (
+        COMPARE_GLOBAL_SPEND_CAP_USD_DEFAULT,
+        COMPARE_MAX_SPEND_USD_DEFAULT,
+        EGRESS_PURPOSE,
+        route_record_compare,
+        run_image_compare,
+    )
+    if not photo_intent(question) or not photo_value_intent(question):
+        return None, None
+    conflicts = [pair for pair in (memory.get("conflicts") or []) if len(pair) == 2]
+    if len(conflicts) != 1:
+        # Exactly one pair, else ambiguous; never guess which pair.
+        return None, None
+    try:
+        left_id = conflicts[0][0]["record_ids"][0]
+        right_id = conflicts[0][1]["record_ids"][0]
+    except (KeyError, IndexError, TypeError):
+        return None, None
+    if folder_id is None:
+        # The router is folder-scoped; a global ask stays compare-free.
+        return None, None
+    local = is_local(settings)
+    if not local and (not settings.cloud_enabled or not settings.model_api_key):
+        return None, None
+    try:
+        with db.connect() as con:
+            decision = route_record_compare(
+                con, folder_id, left_id, right_id, settings,
+                COMPARE_MAX_SPEND_USD_DEFAULT,
+                COMPARE_GLOBAL_SPEND_CAP_USD_DEFAULT)
+        if not decision.fires:
+            return None, None
+        if not local:
+            from yaad.llm.meta_config import spend_refusal
+            if decision.estimated_cost_usd > COMPARE_MAX_SPEND_USD_DEFAULT:
+                return None, None
+            if spend_refusal(db, settings, decision.estimated_cost_usd):
+                return None, None
+        advisory = run_image_compare(db, settings, get_client(settings),
+                                     decision,
+                                     COMPARE_MAX_SPEND_USD_DEFAULT,
+                                     COMPARE_GLOBAL_SPEND_CAP_USD_DEFAULT)
+    except Exception:
+        # Fail closed: no annotation, no status change.
+        return None, None
+    if not isinstance(advisory, dict) or advisory.get("status") != "compared":
+        return None, None
+    egress_id = None
+    if not advisory.get("cache_hit"):
+        try:
+            with db.connect() as con:
+                row = con.execute(
+                    "SELECT id FROM egress_log WHERE purpose=? ORDER BY id DESC LIMIT 1",
+                    (EGRESS_PURPOSE,)).fetchone()
+            egress_id = row["id"] if row is not None else None
+        except Exception:
+            egress_id = None
+    return advisory, egress_id
+
+
 def _stage(timings: dict | None, key: str, start: float) -> None:
     """Record one stage duration (ms). Counts only, never content."""
     if timings is not None:
@@ -405,6 +623,10 @@ def _stage(timings: dict | None, key: str, start: float) -> None:
 def answer_question(db, question: str, folder_id: int | None = None, settings: Settings | None = None,
                     timings: dict | None = None, channels: tuple[str, ...] | None = None) -> dict:
     settings = settings or get_settings()
+    if channels is None:
+        from yaad.query.hybrid import route_channels
+        channels = route_channels(question,
+                                  getattr(settings, "semantic_retrieval", False))
     with db.connect() as con:
         active = con.execute(
             "SELECT 1 FROM index_runs WHERE state='running' AND (folder_id=? OR ? IS NULL) LIMIT 1",
@@ -448,10 +670,24 @@ def answer_question(db, question: str, folder_id: int | None = None, settings: S
                 "candidates": [{"file": p["file"], "partial": False} for p in photos], "disclosure": photo_disclosure,
                 "photos": photos, "memory": dict(NO_MEMORY)}
     photo_gallery = search_photos(db, question, folder_id) if photo_intent(question) else []
+    # Advisory-only compare state, resolved once memory is planned
+    # below; every early return above and below sees a defined value.
+    compare_advisory: dict | None = None
+    compare_egress_id: int | None = None
 
     def _with_gallery(result: dict) -> dict:
         if photo_gallery:
-            result["photos"] = photo_gallery
+            result["photos"] = (annotate_with_compare(photo_gallery, compare_advisory)
+                                if compare_advisory else photo_gallery)
+        if compare_advisory:
+            result["image_compare"] = {
+                "same_subject": compare_advisory["same_subject"],
+                "differences": compare_advisory["differences"],
+                "uncertainties": compare_advisory["uncertainties"],
+                "advisory": True,
+                "record_ids": compare_advisory["record_ids"],
+                "evidence_ids": compare_advisory["evidence_ids"],
+                "cache_hit": compare_advisory["cache_hit"]}
         return result
 
     audio_intent = any(term in question.casefold() for term in ("audio", "voice note", "voice memo", "recording", "transcript", "voice recording"))
@@ -518,6 +754,13 @@ def answer_question(db, question: str, folder_id: int | None = None, settings: S
                   "record_ids": [], "conflict_validations": []}
         memory_meta = {"used": False, "record_ids": [], "claims": [], "context_claims": [],
                        "conflicts": [], "conflict_validations": []}
+    if memory.get("conflicts"):
+        # Validated conflict pairs exist: resolve the advisory once for
+        # the whole answer. Covers the units-conflict and
+        # memory-synthesis conflict branches; the listing-only browse
+        # branch returned above and stays free of model calls.
+        compare_advisory, compare_egress_id = _maybe_image_compare(
+            db, question, folder_id, memory, settings)
     if not memory["conflicts"]:
         historical = historical_response(db, question, folder_id,
                                          require_consent=not is_local(settings))
@@ -699,14 +942,18 @@ def answer_question(db, question: str, folder_id: int | None = None, settings: S
         candidates_override = None
     answer_sensitive = is_sensitive(answer, best[0]["path"])
     disclosure = []
-    if file_ids:
-        marks = ",".join("?" for _ in file_ids)
-        semantic_clause = " OR e.id=?" if review_egress_id else ""
-        args = list(file_ids)
-        if semantic_clause:
-            args.append(review_egress_id)
+    extra_ids = [eid for eid in (review_egress_id, compare_egress_id) if eid]
+    if file_ids or extra_ids:
+        clauses, args = [], []
+        if file_ids:
+            marks = ",".join("?" for _ in file_ids)
+            clauses.append(f"e.file_id IN ({marks})")
+            args.extend(file_ids)
+        for eid in extra_ids:
+            clauses.append("e.id=?")
+            args.append(eid)
         with db.connect() as con:
-            calls = con.execute(f"SELECT e.*,f.path FROM egress_log e LEFT JOIN files f ON f.id=e.file_id WHERE e.file_id IN ({marks}){semantic_clause} ORDER BY e.ts", args).fetchall()
+            calls = con.execute(f"SELECT e.*,f.path FROM egress_log e LEFT JOIN files f ON f.id=e.file_id WHERE {' OR '.join(clauses)} ORDER BY e.ts", args).fetchall()
         disclosure = [{"what": f"{call['content_kind']}, {call['path'] or 'retrieved excerpts'}", "why": call["purpose"],
                        "to": call["provider"], "model": call["model"], "when": call["ts"]} for call in calls]
     evidence = _dedupe_evidence(evidence, values)

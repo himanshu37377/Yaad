@@ -1,0 +1,12 @@
+# Third-party licensing notice
+
+Yaad's own source code is released under the MIT License (see `LICENSE`).
+Third-party dependencies used by Yaad retain their respective licenses;
+see `pyproject.toml` and each package's distribution metadata.
+
+Notably, Yaad depends on PyMuPDF for PDF parsing, which is dual-licensed
+under the GNU Affero General Public License v3.0 (AGPL-3.0) or a
+commercial license from Artifex (see https://pymupdf.readthedocs.io).
+Distributing Yaad together with PyMuPDF may therefore carry AGPL
+obligations beyond the MIT terms of Yaad's own code. All other direct
+dependencies are under permissive licenses (MIT, BSD, or HPND).

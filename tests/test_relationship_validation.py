@@ -170,16 +170,34 @@ def test_later_confirmed_decision_supersedes_earlier(tmp_path):
 
 
 def test_replacement_predating_target_is_rejected(tmp_path):
-    store = room_store(tmp_path / "s3b.sqlite3")
-    store.add_records("run-1", [replacement_candidate()])
+    # Inversion is established by explicit temporal evidence (an
+    # "original plan" claimant over a "final notice" target), never by
+    # ingestion order: created_at must not decide supersession.
+    store = Store(tmp_path / "s3b.sqlite3")
+    store.add_file("a.txt", [("ev_old", "Final notice: the workshop is in Room A")])
+    store.add_file("b.txt", [("ev_new", "Original plan: the workshop is in Room B")])
+    store.add_records("run-1", [
+        candidate("Workshop Room A", "workshop room final",
+                  [("ev_old", "Final notice: the workshop is in Room A")],
+                  detail="Final notice: the workshop is in Room A",
+                  record_type="decision", status="decided",
+                  date_value=None, date_raw=None),
+        candidate("Workshop Room B", "workshop room original",
+                  [("ev_new", "Original plan: the workshop is in Room B")],
+                  detail="Original plan: the workshop is in Room B",
+                  record_type="decision", status="decided",
+                  date_value=None, date_raw=None),
+    ])
     with store.db.transaction() as con:
         rows = {row["title"]: row["id"] for row in con.execute("SELECT id,title FROM memory_records")}
         new_id, old_id = rows["Workshop Room B"], rows["Workshop Room A"]
-        con.execute("UPDATE memory_records SET created_at='2026-01-01 00:00:00' WHERE id=?", (new_id,))
-        con.execute("UPDATE memory_records SET created_at='2026-06-01 00:00:00' WHERE id=?", (old_id,))
         verdict = validate_relationship(con, "supersession", new_id, old_id)
         assert verdict["verdict"] == "contradicted"
         assert "predates" in " ".join(verdict["reasons"])
+        con.execute("INSERT INTO memory_record_evidence(record_id,evidence_id,role,excerpt)"
+                    " VALUES(?,?,?,?)",
+                    (new_id, "ev_old", "supersedes",
+                     "Final notice: the workshop is in Room A"))
         rejected: list = []
         assert apply_supersession_links(con, store.folder_id, rejected=rejected) == []
         assert any("predates" in entry["reason"] for entry in rejected)

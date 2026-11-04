@@ -36,6 +36,13 @@ Validation considers, per relationship kind:
    corroborating identity.
 4. Temporal information, where applicable: a replacement that predates its
    target cannot supersede it; duplicates must agree on date.
+   Supersession order comes only from explicit evidence -- stored
+   effective times, sequence markers (original/interim/update/final),
+   or one-sided change-of-state language -- never from ingestion
+   order (record ids, created_at), file mtimes, or asserted dates,
+   which are either the contested content or unverifiable as
+   decision order. Without an order the pair stays ambiguous and
+   any rivalry is preserved as conflict, never resolved by fiat.
 
 Each relationship keeps its existing kind-specific positive predicate
 (``_rivals``, ``_supersession_related``, ``claims_match``); this layer adds
@@ -43,6 +50,7 @@ the shared evidence gates on top.
 """
 
 import re
+from datetime import datetime, timezone
 
 from yaad.query.retrieve import STOPWORDS
 
@@ -77,7 +85,45 @@ REVISION_TOKENS = frozenset({
     "previous", "current", "latest", "former", "moved", "move",
     "changed", "change", "corrected", "correction", "rescheduled",
     "postponed", "rebooked", "cancelled", "canceled",
+    "interim", "final",
 })
+
+# Sequence markers order revision generations: an "update" supersedes
+# the "original", a "final" notice supersedes an "update". Ranks are
+# deliberately absolute (never relative deixis like previous/former,
+# whose order depends on an unstated now, and never bare new/old,
+# which are indefinite as often as sequential). Unmarked statements
+# sort below every marker: a revision-marked statement explicitly
+# positions itself after the plain record it rivals. Whole-word
+# matching only; month names are values, never order evidence.
+SEQUENCE_MARKER_RANKS = {
+    "original": 0, "initial": 0,
+    "interim": 1,
+    "update": 2, "updated": 2, "revised": 2, "revision": 2,
+    "final": 3, "latest": 3, "current": 3, "currently": 3,
+}
+UNMARKED_RANK = -1
+
+# Change-of-state verbs: a statement asserting a transition ("moved
+# to Room B") positions itself after a plain-state rival. Only past
+# and participle forms count; bare "move"/"change" are nouns and
+# imperatives as often as transitions. "instead" is deliberately
+# absent: contrast ("tea instead of coffee") is not an update.
+TRANSITION_MARKERS = frozenset({
+    "moved", "changed", "corrected", "correction",
+    "rescheduled", "postponed", "rebooked",
+})
+
+# Confirmation-vs-estimate asymmetry: a confirmation causally
+# follows the estimate it settles, so a confirmed statement is
+# newer than an estimated rival on the same matter. Mirrors
+# generate_confirmed_quote_candidates, which proposes exactly
+# these links; validation must agree with generation. Whole-word
+# matching (strictly narrower than the generator's substring
+# scan). Both-sides-confirmed and both-sides-estimated pairs are
+# unordered: two confirmations genuinely conflict.
+CONFIRMATION_MARKERS = frozenset({"confirmed", "confirmation"})
+ESTIMATE_MARKERS = frozenset({"quoted", "quote", "estimate", "proposed", "proposal"})
 
 # Textual value dimensions: attributes whose competing proper-noun values
 # can rival (venues, people, names) once the same event is established.
@@ -90,7 +136,7 @@ VENUE_WORDS = frozenset({
     "theater", "theaters", "theatre", "theatres", "stadium", "stadiums",
     "center", "centers", "centre", "centres", "hotel", "hotels",
     "restaurant", "restaurants", "office", "offices", "campus", "campuses",
-    "complex", "ground", "grounds",
+    "complex", "ground", "grounds", "pavilion", "pavilions",
 })
 PERSON_WORDS = frozenset({
     "person", "persons", "people", "lead", "leads", "led", "leading",
@@ -167,6 +213,24 @@ def corroborated_markers(title: str | None, detail: str | None,
             if word in statement and word in cited}
 
 
+def _one_sided(left_title: str | None, left_detail: str | None,
+               left_excerpts: list[str], right_title: str | None,
+               right_detail: str | None, right_excerpts: list[str],
+               left_excluded: set[str] = frozenset(),
+               right_excluded: set[str] = frozenset()) -> tuple[list[str], list[str]]:
+    """Corroborated markers each side contributes that the other side
+    never mentions, minus each side's own competing attribute values.
+    This is the sole computation behind both subject comparisons, so
+    every caller sees the identical signal."""
+    left_all = subject_markers(left_title, left_detail, left_excerpts) - left_excluded
+    right_all = subject_markers(right_title, right_detail, right_excerpts) - right_excluded
+    left_only = sorted(corroborated_markers(left_title, left_detail, left_excerpts)
+                       - left_excluded - right_all)
+    right_only = sorted(corroborated_markers(right_title, right_detail, right_excerpts)
+                        - right_excluded - left_all)
+    return left_only, right_only
+
+
 def compare_subjects(left_title: str | None, left_detail: str | None,
                      left_excerpts: list[str], right_title: str | None,
                      right_detail: str | None, right_excerpts: list[str]
@@ -179,10 +243,8 @@ def compare_subjects(left_title: str | None, left_detail: str | None,
     markers say nothing either way. One-sided omission is
     underspecification, not contradiction.
     """
-    left_all = subject_markers(left_title, left_detail, left_excerpts)
-    right_all = subject_markers(right_title, right_detail, right_excerpts)
-    left_only = sorted(corroborated_markers(left_title, left_detail, left_excerpts) - right_all)
-    right_only = sorted(corroborated_markers(right_title, right_detail, right_excerpts) - left_all)
+    left_only, right_only = _one_sided(
+        left_title, left_detail, left_excerpts, right_title, right_detail, right_excerpts)
     if left_only and right_only:
         return (CONTRADICTED,
                 f"records name different subjects ({', '.join(left_only)} vs "
@@ -219,7 +281,9 @@ def _attributed_markers(title: str | None, detail: str | None,
     (compressed titles: "Lead Alice Spring Fest Riverside Hall") is
     partitioned by nearest dimension word instead of attributed
     wholesale; equidistant markers go to every tied dimension, the
-    conservative direction."""
+    conservative direction. Partitioning stops two tokens from the
+    dimension noun: beyond that a marker is the subject the value
+    belongs to ("Harbor" in "Harbor Fest Grand Arena"), not value."""
     segments = []
     for field in (title or "", detail or ""):
         segments.extend(re.split(r"[.!?;\n]+", field))
@@ -253,6 +317,14 @@ def _attributed_markers(title: str | None, detail: str | None,
                     if not nearest:
                         continue
                     closest = min(nearest.values())
+                    # A value phrase hugs its dimension noun (at most
+                    # two tokens of name before it). Markers farther
+                    # away in a compressed run ("Harbor Fest Grand
+                    # Arena") are the subject the value belongs to,
+                    # never part of the value: attributing them would
+                    # erase the record's identity evidence.
+                    if closest > 2:
+                        continue
                     for cand_dim, dist in nearest.items():
                         if dist == closest:
                             bound[cand_dim].add(folded[idx])
@@ -276,7 +348,8 @@ def _attributed_markers(title: str | None, detail: str | None,
 # qualify: bare nouns elsewhere never source lowercase values, and
 # idiomatic "place" ("took place downtown") is excluded.
 LABEL_WORDS = frozenset({"venue", "venues", "location", "locations"})
-# Type nouns licensing adjacent numeric identifiers ("Meeting room 5").
+# Type nouns licensing adjacent numeric or single-letter identifiers
+# ("Meeting room 5", "Room A").
 DIGIT_NOUNS = frozenset({"room", "rooms", "hall", "halls"})
 # Past participles and gerunds after a label are predicates, not names
 # ("The venue is booked"): never captured as values.
@@ -287,8 +360,10 @@ def _extended_values(title: str | None, detail: str | None,
                      dimensions: set[str]) -> dict[str, set[str]]:
     """Lowercase and numeric values bound to explicit structure: up to
     three lowercase tokens after a venue/location label (past an
-    optional copula), or a pure-digit token directly after a
-    room/hall noun. Capitalized words belong to marker runs, never
+    optional copula), a pure-digit token directly after a room/hall
+    noun ("room 5"), or a single uppercase letter there ("Room A";
+    lowercase never, so the article in "room a ..." cannot read as a
+    name). Capitalized words belong to marker runs, never
     here; stopwords, dimension words, dates, participles, and digits
     (outside the room rule) end capture. Backstop-grade evidence:
     enough to qualify an answer, never to validate a conflict."""
@@ -302,9 +377,14 @@ def _extended_values(title: str | None, detail: str | None,
         tokens = _TOKEN.findall(segment)
         folded = [token.casefold() for token in tokens]
         for pos, word in enumerate(folded):
-            if word in DIGIT_NOUNS and pos + 1 < len(tokens) and tokens[pos + 1].isdigit():
-                found["venue"].add(f"{word} {tokens[pos + 1]}")
-                continue
+            if word in DIGIT_NOUNS and pos + 1 < len(tokens):
+                nxt = tokens[pos + 1]
+                if nxt.isdigit():
+                    found["venue"].add(f"{word} {nxt}")
+                    continue
+                if len(nxt) == 1 and nxt.isalpha() and nxt.isupper():
+                    found["venue"].add(f"{word} {nxt.casefold()}")
+                    continue
             if word not in LABEL_WORDS:
                 continue
             nxt = pos + 1
@@ -411,12 +491,9 @@ def compare_anchored_subjects(left_title: str | None, left_detail: str | None,
     """Subject-identity signal over anchor markers only: corroborated
     markers minus each side's differing dimension values. Values
     compete; they never veto identity by themselves."""
-    left_all = subject_markers(left_title, left_detail, left_excerpts) - left_excluded
-    right_all = subject_markers(right_title, right_detail, right_excerpts) - right_excluded
-    left_only = sorted(corroborated_markers(left_title, left_detail, left_excerpts)
-                       - left_excluded - right_all)
-    right_only = sorted(corroborated_markers(right_title, right_detail, right_excerpts)
-                        - right_excluded - left_all)
+    left_only, right_only = _one_sided(
+        left_title, left_detail, left_excerpts, right_title, right_detail, right_excerpts,
+        left_excluded, right_excluded)
     if left_only and right_only:
         return (CONTRADICTED,
                 f"records name different subjects ({', '.join(left_only)} vs "
@@ -480,9 +557,116 @@ def _details(left: dict, right: dict, left_supports: list[dict],
     }
 
 
+def _supersession_rivalry_dimension(left, right, details: dict) -> str | None:
+    """The single attribute the pair demonstrably competes on, if any:
+    the contested proper-noun dimension, else a rival stored date or
+    amount. Subject inheritance is only ever considered over a real
+    rivalry; statements differing on nothing cannot inherit."""
+    rivalry = details.get("textual_rivalry") or {}
+    if rivalry.get("contested") == 1 and rivalry.get("dimension"):
+        return str(rivalry["dimension"])
+    if left.get("date_value") and right.get("date_value") \
+            and left.get("date_value") != right.get("date_value"):
+        return "date"
+    left_amount, right_amount = left.get("amount_value"), right.get("amount_value")
+    if left_amount and right_amount and left_amount != right_amount:
+        return "amount"
+    return None
+
+
+def sequence_rank(text: str) -> int:
+    """Highest sequence-marker rank in the text, UNMARKED_RANK when none.
+
+    Whole-word matching over the record's own words (title, detail,
+    excerpts). Multi-marker statements take their max: "final
+    version of the original draft" is final."""
+    ranks = [SEQUENCE_MARKER_RANKS[word]
+             for word in _TOKEN.findall((text or "").casefold())
+             if word in SEQUENCE_MARKER_RANKS]
+    return max(ranks) if ranks else UNMARKED_RANK
+
+
+def has_transition(text: str) -> bool:
+    """True when the text asserts a change of state."""
+    return bool(set(_TOKEN.findall((text or "").casefold())) & TRANSITION_MARKERS)
+
+
+def found_sequence_markers(text: str) -> dict[str, int]:
+    """Sequence markers present in the text, mapped to their ranks."""
+    return {word: SEQUENCE_MARKER_RANKS[word]
+            for word in set(_TOKEN.findall((text or "").casefold()))
+            if word in SEQUENCE_MARKER_RANKS}
+
+
+def _parse_moment(value) -> datetime | None:
+    """Stored effective time as naive UTC; None when missing or garbled.
+
+    Accepts ISO dates and datetimes with T/space separators and
+    optional offsets. Comparison-grade only: never falls back to
+    ingestion time."""
+    if not value:
+        return None
+    try:
+        moment = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if moment.tzinfo is not None:
+        moment = moment.astimezone(timezone.utc).replace(tzinfo=None)
+    return moment
+
+
+def temporal_order(claimant, target, claimant_text: str = "",
+                   target_text: str = "") -> int | None:
+    """Order a supersession pair: +1 claimant strictly newer, -1
+    strictly older, None when no order can be established.
+
+    Evidence, in precedence order: stored effective times on both
+    sides (explicit schema timestamps); sequence-marker ranks;
+    one-sided change-of-state language; confirmation-vs-estimate
+    asymmetry (a confirmation causally follows its estimate).
+    Equal effective times, equal ranks without further evidence,
+    and markerless plain-state pairs are all unknown -- never
+    guessed.
+
+    Deliberately never consulted: record ids and created_at
+    (ingestion order is not fact order), file mtimes (sync order
+    is not fact order), and asserted dates (for date slots the
+    date IS the contested content; for other slots an attached
+    date is unverifiable as decision order). Callers treat None
+    as undecidable and preserve the rivalry as conflict.
+    """
+    cdict, tdict = dict(claimant or {}), dict(target or {})
+    ceff = _parse_moment(cdict.get("effective_time"))
+    teff = _parse_moment(tdict.get("effective_time"))
+    if ceff is not None and teff is not None:
+        if ceff != teff:
+            return 1 if ceff > teff else -1
+        return None
+    crank, trank = sequence_rank(claimant_text), sequence_rank(target_text)
+    if crank != trank:
+        return 1 if crank > trank else -1
+    ctrans, ttrans = has_transition(claimant_text), has_transition(target_text)
+    if ctrans and not ttrans:
+        return 1
+    if ttrans and not ctrans:
+        return -1
+    ctokens = set(_TOKEN.findall((claimant_text or "").casefold()))
+    ttokens = set(_TOKEN.findall((target_text or "").casefold()))
+    cconf = bool(ctokens & CONFIRMATION_MARKERS) and not (ctokens & ESTIMATE_MARKERS)
+    tconf = bool(ttokens & CONFIRMATION_MARKERS) and not (ttokens & ESTIMATE_MARKERS)
+    cest = bool(ctokens & ESTIMATE_MARKERS) and not (ctokens & CONFIRMATION_MARKERS)
+    test = bool(ttokens & ESTIMATE_MARKERS) and not (ttokens & CONFIRMATION_MARKERS)
+    if cconf and test:
+        return 1
+    if tconf and cest:
+        return -1
+    return None
+
+
 def validate_pair(kind: str, left, right,
                   left_supports: list[dict], right_supports: list[dict],
-                  allow_conflicted_claimant: bool = False) -> dict:
+                  allow_conflicted_claimant: bool = False,
+                  subject_uncontested: bool = False) -> dict:
     """Validate one proposed relationship between two records.
 
     ``left``/``right`` are record mappings (sqlite rows or dicts);
@@ -496,6 +680,11 @@ def validate_pair(kind: str, left, right,
     independently validating that the target is the claimant's own
     conflict partner; stale, proposed, and inferred claimants stay
     rejected, and every other constraint still applies.
+    ``subject_uncontested`` is the caller's folder-level proof that no
+    other current record could be the claimant's subject (see
+    ``records.subject_uncontested``); it only ever lets a supersession
+    claimant that names no distinguishing subject inherit the subject
+    its cited evidence establishes. Conflicts and duplicates ignore it.
     """
     if kind not in RELATIONSHIP_KINDS:
         raise ValueError(f"unknown relationship kind: {kind!r}")
@@ -579,8 +768,15 @@ def validate_pair(kind: str, left, right,
                         "target is inferred experiment output, not a servable claim")
         if right.get("status") in ("stale", "superseded"):
             return fail(CONTRADICTED, f"target is {right.get('status')}, not current")
-        created_left, created_right = left.get("created_at") or "", right.get("created_at") or ""
-        if created_left and created_right and created_left < created_right:
+        order = temporal_order(
+            left, right,
+            " ".join([left.get("title") or "", left.get("detail") or "", *left_excerpts]),
+            " ".join([right.get("title") or "", right.get("detail") or "", *right_excerpts]))
+        if order is None:
+            return fail(AMBIGUOUS,
+                        "no temporal order between claimant and target; "
+                        "supersession undecidable")
+        if order < 0:
             return fail(CONTRADICTED,
                         "replacement predates the record it claims to replace")
         if not left_ok or not right_ok:
@@ -645,12 +841,37 @@ def validate_pair(kind: str, left, right,
         left.get("title"), left.get("detail"), left_excerpts,
         right.get("title"), right.get("detail"), right_excerpts,
         left_excluded, right_excluded)
+    inherited = False
     if subject_verdict is not None:
-        return fail(subject_verdict, subject_reason or "subjects differ")
+        # Subject inheritance (supersession only): an elliptical
+        # claimant -- one whose corroborated markers all appear in the
+        # target's own statement -- asserts no subject of its own, so
+        # a one-sided or capitalization-phantom marker verdict is
+        # underspecification, not a subject claim. When the pair
+        # demonstrably competes on one attribute and the caller proved
+        # no other current record could be its subject, the subject
+        # the claimant's cited evidence points at is the only
+        # candidate left, so the omission alone stops vetoing. A
+        # claimant carrying any marker absent from the target
+        # statement ("Harbor" against a Spring Fest statement) never
+        # inherits, whatever the marker verdict was.
+        if kind == "supersession" and subject_uncontested:
+            claimant_markers = (corroborated_markers(
+                left.get("title"), left.get("detail"), left_excerpts) - left_excluded)
+            target_statement = _content_set(right.get("title"), right.get("detail"))
+            claimant_distinguishing = [marker for marker in claimant_markers
+                                       if marker not in target_statement]
+            if not claimant_distinguishing \
+                    and _supersession_rivalry_dimension(left, right, details):
+                inherited = True
+                details["subject_inherited"] = True
+        if not inherited:
+            return fail(subject_verdict, subject_reason or "subjects differ")
     if kind == "supersession":
-        return _result(kind, left_id, right_id, SUPPORTED,
-                       ["same subject; current explicit replacement with distinct resolving evidence"],
-                       details)
+        reason = ("subject inherited from cited evidence; current explicit replacement "
+                  "with distinct resolving evidence" if inherited else
+                  "same subject; current explicit replacement with distinct resolving evidence")
+        return _result(kind, left_id, right_id, SUPPORTED, [reason], details)
     return _result(kind, left_id, right_id, SUPPORTED,
                    ["same subject, type, and date with strong wording overlap"], details)
 
@@ -695,10 +916,14 @@ def _same_statements(left_ok: list[dict], right_ok: list[dict], normalize) -> bo
 
 
 def validate_relationship(con, kind: str, left_id: int, right_id: int,
-                          allow_conflicted_claimant: bool = False) -> dict:
+                          allow_conflicted_claimant: bool = False,
+                          subject_uncontested: bool = False) -> dict:
     """Database-backed validation: fetch both records with their
     supporting excerpts, live unit texts, and source files, then
-    validate. Missing records are ambiguous, never an exception."""
+    validate. Missing records are ambiguous, never an exception.
+    ``subject_uncontested`` is forwarded to ``validate_pair``; only
+    ``apply_supersession_links`` computes it (see
+    ``records.subject_uncontested``)."""
     left = con.execute("SELECT * FROM memory_records WHERE id=?", (left_id,)).fetchone()
     right = con.execute("SELECT * FROM memory_records WHERE id=?", (right_id,)).fetchone()
     if left is None or right is None:
@@ -724,4 +949,5 @@ def validate_relationship(con, kind: str, left_id: int, right_id: int,
         return rows
 
     return validate_pair(kind, left, right, supports(left_id), supports(right_id),
-                           allow_conflicted_claimant=allow_conflicted_claimant)
+                           allow_conflicted_claimant=allow_conflicted_claimant,
+                           subject_uncontested=subject_uncontested)

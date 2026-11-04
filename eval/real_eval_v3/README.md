@@ -1,9 +1,9 @@
-# Evaluation V3 (prepared, not yet run live)
+# Evaluation V3 (live run completed 2026-10-30)
 
 Independent from V1/V2; their artifacts are never modified. V3
 validates the five post-V2 fixes: slot-aware Tier A, transitive
 supersession, confirmed-vs-quoted candidacy, unresolved status, and
-photo ranking. **No live calls have been made.**
+photo ranking. **Live run completed 2026-10-30; see `results/` (local-only, gitignored: egress receipts, transcripts, report). Reruns need explicit spend approval.**
 
 Methodology is identical to V2: one index pass per folder, snapshot
 arms (full vs memory-cleared baseline), identical settings, alternating

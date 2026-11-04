@@ -444,3 +444,162 @@ dialog,.consent-dialog{border-radius:16px}
 .status-label.partial,.status-label.cloud_unavailable,.status-label.local_unavailable{background:var(--uncertain-bg);color:var(--uncertain)}
 .status-label.error{background:var(--conflict-bg);color:var(--conflict)}
 .status-label.not_found,.status-label.indexing{color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent)}
+
+/* === Premium SaaS polish: hierarchy, rhythm, component consistency (layout-preserving) === */
+
+/* 1. Base rhythm + rendering */
+body{font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:color-mix(in srgb,var(--accent) 26%,transparent)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+
+/* 2. Sidebar: calmer chrome, clearer active state, consistent icon rhythm */
+.sidebar{padding:18px 14px 14px}
+.brand-row{margin-bottom:16px;padding:0 2px 0 8px}
+.brand-name{font-size:20px;font-weight:600}
+.new-chat{height:42px;font-size:13.5px;font-weight:600;border-radius:10px;transition:background .15s,border-color .15s}
+.new-chat:hover{border-color:var(--muted)}
+.primary-nav{gap:2px}
+.nav-item{height:41px;font-size:13.5px;gap:12px;padding:0 12px;border-radius:9px;transition:background .15s,color .15s}
+.nav-item svg{width:18px;height:18px;opacity:.82}
+.nav-item:hover{color:var(--text)}
+.nav-item.active{color:var(--text);font-weight:600}
+.nav-item.active svg{opacity:1;color:var(--accent)}
+.nav-item.active:before{left:2px;top:10px;bottom:10px;width:3px;border-radius:3px}
+.recent-heading{font-size:10.5px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:20px 12px 8px}
+.recent-item{font-size:12.5px;line-height:1.45;padding:8px 12px;border-radius:8px}
+.recent-empty{font-size:12px;line-height:1.6;margin:0 12px}
+.sidebar-bottom{padding-top:12px;gap:2px}
+
+/* 3. Topbar: quiet bar, status reads as one pill */
+.topbar{height:62px;padding:0 28px}
+.cloud-indicator{gap:9px;padding:7px 12px;border:1px solid var(--border-soft);border-radius:999px;background:var(--surface);font-size:12.5px;font-weight:550;color:var(--secondary);transition:background .15s,border-color .15s}
+.cloud-indicator:hover{background:var(--hover);border-color:var(--border)}
+.cloud-indicator .status-dot{width:8px;height:8px}
+.cloud-indicator svg{width:15px;height:15px}
+
+/* 4. Page headers: one scale across Home / Sources / Index / Memory / History */
+.management-inner{max-width:1080px;padding:46px 40px 64px}
+.home-inner{max-width:1120px}
+.eyebrow{font-size:10.5px;font-weight:650;letter-spacing:.13em;margin:0 0 10px}
+.management-inner>h1,.home-inner>h1{font-size:31px;line-height:1.15;letter-spacing:-.02em;margin:0}
+.intro{font-size:14.5px;line-height:1.65;margin:10px 0 24px;max-width:640px}
+
+/* 5. Home ask bar: single inviting control, arrow reads as action */
+.home-ask{width:min(620px,100%);margin:24px 0 2px;padding:12px 12px 12px 20px;font-size:15px;border-radius:14px;transition:border-color .16s,background .16s}
+.home-ask:hover{border-color:var(--muted)}
+.home-ask>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-ask-arrow{width:34px;height:34px;font-size:15px;font-weight:600;flex:none}
+
+/* 6. Home cards: aligned headers, even rows, pinned actions */
+.home-grid{margin-top:26px;gap:16px}
+.home-card{padding:20px 22px 18px;border-radius:14px}
+.home-card h2{font-size:12px;letter-spacing:.09em;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border-soft)}
+.home-card h2::after{display:none}
+.home-list{gap:0}
+.home-list li{padding:10px 10px;margin:0 -10px;min-height:42px}
+.home-list li+li{border-top:1px solid var(--border-soft)}
+.home-list li>:first-child{font-size:13.5px;line-height:1.5}
+.home-link{font-size:13.5px}
+.home-date{font-size:12.5px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;text-transform:capitalize}
+.home-tag{font-size:11px;padding:4px 10px}
+.home-action{font-size:13px;font-weight:650;padding:12px 0 2px}
+.home-empty{font-size:13.5px}
+
+/* 7. Panels: form, privacy, settings, memory extraction share one treatment */
+.folder-form-panel,.privacy-card,.settings-card{padding:22px 24px;border-radius:14px}
+.field-label{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:10px}
+.path-row{display:flex;align-items:center;gap:12px}
+.folder-picker-button{min-height:42px;padding:0 16px;font-size:13px;font-weight:600;border-radius:10px}
+.selected-folder{font-size:13.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-help{font-size:13px;line-height:1.6;margin:10px 0 0}
+.consent-block{margin-top:18px;padding-top:16px}
+.consent-row{gap:10px}
+.consent-row>input{width:17px;height:17px;margin-top:1px;accent-color:var(--accent);cursor:pointer}
+.consent-row strong{font-size:13.5px}
+.consent-info{font-size:13px;margin-top:8px}
+.form-message{font-size:12.5px;line-height:1.55}
+.form-message:not(:empty){margin-top:12px;padding:10px 12px;border-radius:9px}
+.memory-extract-panel .path-row{flex-wrap:wrap}
+.memory-extract-panel select{min-height:42px;font-size:13.5px}
+
+/* 8. Summary metrics: even cards, tabular numerals, restrained tone labels */
+.summary-grid{gap:12px;margin:22px 0 2px}
+.summary-item{min-height:96px;padding:16px 18px;border-radius:14px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.summary-value{font-size:27px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.summary-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* 9. Section headings + tables: predictable scan pattern */
+.section-heading{margin:32px 0 12px;gap:12px}
+.section-heading h2{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.section-heading p{font-size:13px;margin-top:4px}
+.table-wrap{border-radius:14px;overflow:hidden auto}
+.data-table th{font-size:11px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;padding:12px 16px;background:var(--surface-2)}
+.data-table td{padding:13px 16px;font-size:13.5px;line-height:1.55}
+.data-table tbody tr{transition:background .14s}
+.file-table td:nth-child(2){color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.05em}
+.file-table-name{gap:10px}
+.file-table-name .source-icon{color:var(--muted)}
+.folder-select{gap:10px;font-size:13.5px;font-weight:550}
+.folder-select:hover .truncate-path{color:var(--accent)}
+.numeric-cell{font-variant-numeric:tabular-nums}
+.table-detail{font-size:13px!important;color:var(--muted);line-height:1.5}
+td .table-detail{max-width:100%}
+.table-empty{padding:28px 16px!important;font-size:13px}
+.egress-time{font-size:12.5px}
+.memory-title{font-size:13.5px;font-weight:600}
+.history-table td strong{font-size:13.5px}
+.history-change{font-size:12.5px}
+
+/* 10. Badges: one shape, theme-aware tones, capitalized labels */
+.status-badge,.consent-badge,.home-tag{font-size:11px;font-weight:650;letter-spacing:.02em;padding:5px 11px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+.status-badge{text-transform:capitalize}
+.status-badge.ready,.status-badge.indexed,.status-badge.current,.status-badge.answered,.status-badge.recorded,.status-badge.succeeded{background:var(--verified-bg);color:var(--verified);border-color:color-mix(in srgb,var(--verified) 30%,transparent)}
+.status-badge.partial,.status-badge.skipped,.status-badge.indexing,.status-badge.updated,.status-badge.proposal{background:var(--uncertain-bg);color:var(--uncertain);border-color:color-mix(in srgb,var(--uncertain) 30%,transparent)}
+.status-badge.failed,.status-badge.conflict,.status-badge.conflicted{background:var(--conflict-bg);color:var(--conflict);border-color:color-mix(in srgb,var(--conflict) 32%,transparent)}
+.status-badge.info,.status-badge.empty,.status-badge.historical,.status-badge.stale{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+.consent-badge.consented{background:var(--verified-bg);color:var(--verified);border-color:color-mix(in srgb,var(--verified) 30%,transparent)}
+.home-tag{color:var(--secondary);background:var(--surface-2);border-color:var(--border-soft)}
+.home-tag.conflict{background:var(--conflict-bg);color:var(--conflict);border-color:color-mix(in srgb,var(--conflict) 32%,transparent)}
+
+/* 11. Buttons, selects, pagination: consistent heights and press states */
+.primary-button{min-height:42px;padding:0 16px;font-size:13.5px;border-radius:10px;transition:background .15s,opacity .15s}
+.text-button{min-height:36px;padding:0 13px;font-size:13px;font-weight:550;border-radius:9px;transition:background .15s,border-color .15s}
+.table-action{min-height:33px;padding:0 13px;font-size:12.5px;font-weight:600;border-radius:8px}
+.primary-button:active,.text-button:active,.table-action:active{transform:translateY(1px)}
+button:disabled{opacity:.5;cursor:not-allowed}
+select,input[type=text],input:not([type]),textarea{font-size:13.5px}
+.section-heading select{min-height:38px;font-size:13px;padding:0 12px}
+.pagination{margin-top:16px;gap:12px;font-size:12.5px}
+.pagination .text-button{min-width:88px}
+
+/* 12. Banners and empty states */
+.state-message{font-size:13px;line-height:1.6;padding:11px 13px;border-radius:10px}
+.privacy-alert{font-size:13px;border-radius:10px}
+.empty-state{padding:36px 32px;border-radius:16px}
+.empty-state h2{font-size:18px}
+.empty-state p{font-size:13.5px}
+
+/* 13. Dialogs + evidence drawer */
+dialog.consent-dialog,dialog.memory-dialog{padding:26px 28px;border-radius:18px}
+.dialog-head h2{font-size:17px;font-weight:650;letter-spacing:-.01em}
+.consent-dialog p{font-size:13.5px;line-height:1.65}
+.detail-list{font-size:13.5px}
+.evidence-drawer.open{width:min(460px,38vw)}
+.drawer-content{padding:22px 26px 36px;font-size:13.5px;line-height:1.65}
+
+/* 14. Chat parity: same bubble, badge, and composer language */
+.user-bubble{font-size:14px;line-height:1.6;padding:12px 16px}
+.assistant-answer{font-size:14.5px;line-height:1.7}
+.answer-badge{font-size:11px;font-weight:650;padding:5px 11px}
+.composer{border-radius:16px;padding:12px 12px 10px 18px}
+.composer textarea{font-size:15px;line-height:1.6;min-height:56px;padding:4px 2px 10px}
+.local-disclaimer{font-size:11px;margin-top:10px}
+
+/* 15. Scrollbars: thin, theme-aware, out of the way */
+.sidebar ::-webkit-scrollbar,.conversation-scroll::-webkit-scrollbar,.table-wrap::-webkit-scrollbar,.drawer-content::-webkit-scrollbar{width:8px;height:8px}
+.sidebar ::-webkit-scrollbar-thumb,.conversation-scroll::-webkit-scrollbar-thumb,.table-wrap::-webkit-scrollbar-thumb,.drawer-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
+.sidebar ::-webkit-scrollbar-track,.conversation-scroll::-webkit-scrollbar-track,.table-wrap::-webkit-scrollbar-track,.drawer-content::-webkit-scrollbar-track{background:transparent}
+
+@media(max-width:1100px){.management-inner{padding:38px 28px 56px}.summary-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.management-inner{padding:28px 18px 48px}.management-inner>h1,.home-inner>h1{font-size:26px}.home-card{padding:18px}.data-table th,.data-table td{padding-left:12px;padding-right:12px}.cloud-indicator{font-size:11.5px;padding:6px 10px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}

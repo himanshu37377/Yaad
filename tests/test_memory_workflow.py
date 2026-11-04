@@ -58,7 +58,6 @@ def test_pdf_facts_keep_verified_page_excerpt_and_are_searchable(tmp_path):
     repeated = indexer.index_folder(folder_id)
     answer = answer_question(db, "What is the deadline?", folder_id)
     with db.connect() as con:
-        fact = con.execute("SELECT * FROM facts").fetchone()
         derived = con.execute("SELECT locator,meta FROM units WHERE kind='derived_fact'").fetchone()
 
     assert result["indexed"] == 1
@@ -66,7 +65,8 @@ def test_pdf_facts_keep_verified_page_excerpt_and_are_searchable(tmp_path):
     assert fake.calls[0][0] == "pdf"
     assert answer["status"] == "answered"
     assert answer["values"][0]["value"] == "2026-11-30"
-    assert fact["verification"] == "source_excerpt_verified"
+    # The verified excerpt lives on the derived-fact unit itself (the
+    # write-only facts table that once duplicated it is gone).
     assert json.loads(derived["locator"])["page"] == 1
     assert json.loads(derived["meta"])["source_excerpt"] == "The project deadline is 2026-11-30."
 

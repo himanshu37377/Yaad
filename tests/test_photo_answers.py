@@ -192,17 +192,17 @@ def test_p12_superseded_excluded_from_assisted_answer(tmp_path):
     store = Store(tmp_path / "p12.sqlite3")
     add_image(store, "stage.jpg", "Spring Fest venue stage")
     store.add_file("a.txt", [("ev_o", "Council booked Riverside Hall for Spring Fest"),
-                             ("ev_n", "Council booked Grand Arena for Spring Fest on March 3rd")])
+                             ("ev_n", "Council moved Spring Fest to Grand Arena on March 3rd")])
     store.add_records("run-1", [
         candidate("Council Spring Fest Riverside Hall", "spring fest",
                   [("ev_o", "Council booked Riverside Hall for Spring Fest")],
                   record_type="decision", status="decided", date_value=None, date_raw=None,
                   detail="Council booked Riverside Hall for Spring Fest"),
         candidate("Council Spring Fest Grand Arena", "spring fest",
-                  [("ev_n", "Council booked Grand Arena for Spring Fest on March 3rd")],
+                  [("ev_n", "Council moved Spring Fest to Grand Arena on March 3rd")],
                   record_type="decision", status="decided",
                   date_value="2026-03-03", date_raw="March 3rd",
-                  detail="Council booked Grand Arena for Spring Fest"),
+                  detail="Council moved Spring Fest to Grand Arena"),
     ])
     with store.db.transaction() as con:
         con.execute("INSERT INTO memory_record_evidence(record_id,evidence_id,role,excerpt)"

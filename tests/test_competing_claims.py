@@ -104,6 +104,15 @@ def test_t3_proposal_does_not_override_confirmation(tmp_path):
 def test_t4_validated_newer_venue_supersedes(tmp_path):
     store = venue_pair_store(tmp_path / "t4.sqlite3")
     with store.db.transaction() as con:
+        # The replacement carries explicit revision language ("moved"),
+        # which is what licenses the newer-than direction.
+        con.execute("UPDATE units SET text='Council moved Spring Fest to Grand Arena on March 3rd'"
+                    " WHERE evidence_id='ev_b'")
+        con.execute("UPDATE memory_records SET detail='Council moved Spring Fest to Grand Arena'"
+                    " WHERE id=2")
+        con.execute("UPDATE memory_record_evidence"
+                    " SET excerpt='Council moved Spring Fest to Grand Arena on March 3rd'"
+                    " WHERE record_id=2 AND role='supports'")
         con.execute("INSERT INTO memory_record_evidence(record_id,evidence_id,role,excerpt)"
                     " VALUES(2,'ev_a','supersedes','Council booked Riverside Hall for Spring Fest')")
         rejected: list = []
@@ -314,6 +323,15 @@ def test_f1_production_order_mark_then_supersede_resolves(tmp_path):
     clears it."""
     store = venue_pair_store(tmp_path / "f1.sqlite3")
     with store.db.transaction() as con:
+        # The replacement carries explicit revision language ("moved"),
+        # which is what licenses the newer-than direction.
+        con.execute("UPDATE units SET text='Council moved Spring Fest to Grand Arena on March 3rd'"
+                    " WHERE evidence_id='ev_b'")
+        con.execute("UPDATE memory_records SET detail='Council moved Spring Fest to Grand Arena'"
+                    " WHERE id=2")
+        con.execute("UPDATE memory_record_evidence"
+                    " SET excerpt='Council moved Spring Fest to Grand Arena on March 3rd'"
+                    " WHERE record_id=2 AND role='supports'")
         con.execute("INSERT INTO memory_record_evidence(record_id,evidence_id,role,excerpt)"
                     " VALUES(2,'ev_a','supersedes','Council booked Riverside Hall for Spring Fest')")
         pairs = [tuple(sorted(pair)) for pair in mark_conflicts(con, store.folder_id)]

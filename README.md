@@ -33,31 +33,23 @@ Guiding principle: **Models Propose. Evidence Disposes.** AI models assist with 
 
 ## Impact
 
-Everyone has information. Finding it when needed is the challenge.
+Important information is rarely stored in one place. Deadlines are buried in notices, decisions live in meeting notes, budgets sit inside proposals, and commitments are scattered across documents, images, and voice memos. Finding a detail is frustrating; knowing whether it is still accurate is harder.
 
-Regardless of our profession, background, or daily activities, we accumulate information across documents, PDFs, images, screenshots, emails, and recordings. Over time, remembering where something was stored, connecting related details, and knowing whether information is still relevant becomes increasingly difficult.
+Yaad turns those scattered files into connected memory you can question, and every answer points back to its source.
 
-Yaad addresses this universal challenge by transforming scattered digital files into persistent, searchable, and connected personal memory.
+What it is built to do:
 
-Its impact goes beyond document search:
+- **Reduce searching:** ask in plain language instead of reopening files (time savings are not yet measured).
+- **Preserve context:** keep decisions, deadlines, commitments, and open questions with their history.
+- **Surface conflicts:** when sources disagree, show both with citations instead of silently picking one.
+- **Build trust:** every answer cites openable evidence, or abstains.
+- **Keep control:** local-first storage, folders added only explicitly, and cloud processing only with per-folder consent.
 
-* Save time: Retrieve information without manually searching through multiple files.
-* Preserve context: Retain important decisions, deadlines, commitments, and past information.
-* Make informed decisions: Connect information across sources and identify conflicting or outdated details.
-* Build trust: Verify answers through references to original evidence.
-* Avoid forgotten details: Keep important information and unresolved questions accessible.
+**Illustrative walkthrough (sample documents):** In the Autumn Fest demonstration, two workshop notices give different suggestion deadlines: November 5 and November 7. Yaad retrieves both notices, flags the disagreement, and shows both dates with references to their sources, so the organizer knows to clarify instead of acting on one version.
 
-### Impact across everyday life
+**Who it helps first:** students managing academic documents and applications, event organizers coordinating budgets and deadlines, and anyone who works across many documents. Freelancers, professionals, and families are plausible extensions but have not been tested.
 
-Yaad can support students managing academic records, professionals handling projects, families organizing personal documents, entrepreneurs tracking decisions, and individuals preserving information from everyday experiences. These are examples of a broader purpose: making accumulated digital information useful regardless of how or where it was created.
-
-### Early validation and vision
-
-Feedback from two users provided encouraging informal observations. Both found Yaad useful for everyday information retrieval. One appreciated evidence-backed answers, while the other suggested making important deadlines more prominent. This is preliminary feedback, not a formal usability study.
-
-Our vision is simple: make personal information as accessible as asking a question. Instead of letting valuable information disappear into folders and forgotten files, Yaad aims to help people retrieve, connect, and reuse what they already know.
-
-Broader user validation and measured time savings remain important next steps.
+**Early validation:** feedback from two users (informal observations, not a usability study). Both found Yaad useful for everyday retrieval. One valued inspecting the original source behind an answer. The other suggested making deadlines more prominent, which is not yet implemented: the Home view lists upcoming dates but has no urgency highlighting. Broader user validation and measured time savings are the next steps.
 
 ## Hackathon Contributions — What We Built
 

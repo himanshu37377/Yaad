@@ -33,23 +33,35 @@ Guiding principle: **Models Propose. Evidence Disposes.** AI models assist with 
 
 ## Impact
 
-Important information is rarely stored in one place. Deadlines are buried in notices, decisions live in meeting notes, budgets sit inside proposals, and commitments are scattered across documents and conversations. Finding a detail is frustrating; knowing whether it is still accurate is even harder.
+Everyone has information. Finding it when needed is the challenge.
 
-Yaad addresses this problem by turning scattered files into searchable, connected memory. Instead of remembering filenames or manually comparing documents, users can ask questions in natural language, retrieve information across sources, and inspect the evidence behind an answer. When sources disagree, Yaad surfaces the conflict rather than silently choosing a value.
+Regardless of our profession, background, or daily activities, we accumulate information across documents, PDFs, images, screenshots, emails, and recordings. Over time, remembering where something was stored, connecting related details, and knowing whether information is still relevant becomes increasingly difficult.
 
-Early feedback from two users (informal qualitative observations, not a formal usability study): both found Yaad more convenient and useful for day-to-day information retrieval. One highlighted the value of evidence-backed answers: being able to inspect the original source and verify information instead of simply trusting an AI-generated response — which Yaad implements today through cited, openable evidence. The other suggested making important deadlines more prominent in the interface so time-sensitive information is easier to identify; that improvement is not yet implemented (the Home view lists upcoming dates, but urgency highlighting does not exist).
+Yaad addresses this universal challenge by transforming scattered digital files into persistent, searchable, and connected personal memory.
 
-Illustrative walkthrough (sample documents): In the Autumn Fest demonstration, two workshop notices specify different suggestion deadlines: November 5 and November 7. Yaad retrieves both notices, identifies the disagreement, and presents the conflicting dates with references to their original sources. The organizer can recognize that clarification is needed instead of unknowingly acting on one version.
+Its impact goes beyond document search:
 
-The strongest immediate use cases are students managing academic documents and applications, event organizers coordinating budgets and deadlines, and individuals who regularly work across multiple documents. The same approach can extend to freelancers and professionals managing project information.
+* Save time: Retrieve information without manually searching through multiple files.
+* Preserve context: Retain important decisions, deadlines, commitments, and past information.
+* Make informed decisions: Connect information across sources and identify conflicting or outdated details.
+* Build trust: Verify answers through references to original evidence.
+* Avoid forgotten details: Keep important information and unresolved questions accessible.
 
-That is the Build for Your World vision: making the information people already have more accessible, connected, and trustworthy.
+### Impact across everyday life
 
-Yaad demonstrates this today through multimodal ingestion, persistent structured memory, cross-file retrieval, evidence-backed answers, and conflict handling. Early feedback is encouraging, while broader user validation, measured time savings, and more actionable deadline-focused UI improvements remain opportunities for further development.
+Yaad can support students managing academic records, professionals handling projects, families organizing personal documents, entrepreneurs tracking decisions, and individuals preserving information from everyday experiences. These are examples of a broader purpose: making accumulated digital information useful regardless of how or where it was created.
+
+### Early validation and vision
+
+Feedback from two users provided encouraging informal observations. Both found Yaad useful for everyday information retrieval. One appreciated evidence-backed answers, while the other suggested making important deadlines more prominent. This is preliminary feedback, not a formal usability study.
+
+Our vision is simple: make personal information as accessible as asking a question. Instead of letting valuable information disappear into folders and forgotten files, Yaad aims to help people retrieve, connect, and reuse what they already know.
+
+Broader user validation and measured time savings remain important next steps.
 
 ## Hackathon Contributions — What We Built
 
-Yaad was designed and built from scratch during the hackathon window (October 27–November 4, 2026): the full application architecture and every end-to-end workflow below are original hackathon implementation — CLI, API, and web UI (`yaad/cli.py`, `yaad/api/main.py`, `yaad/ui/`), scan/index pipeline (`yaad/scan/`), extractors (`yaad/extract/`), memory engine (`yaad/memory/`), query pipeline (`yaad/query/`), LLM boundary (`yaad/llm/`), privacy controls (`yaad/privacy/`), SQLite storage (`yaad/db.py`), the 882-test suite (`tests/`), evaluations (`eval/`), sample fixtures (`sample_files/`), and documentation (`docs/`, including design records dated Oct 29–31). Technical contributions:
+Yaad was designed and built from scratch during the hackathon window (October 27–November 4, 2026): the full application architecture and every end-to-end workflow below are original hackathon implementation — CLI, API, and web UI (`yaad/cli.py`, `yaad/api/main.py`, `yaad/ui/`), scan/index pipeline (`yaad/scan/`), extractors (`yaad/extract/`), memory engine (`yaad/memory/`), query pipeline (`yaad/query/`), LLM boundary (`yaad/llm/`), privacy controls (`yaad/privacy/`), SQLite storage (`yaad/db.py`), the 900+ test suite (`tests/`), evaluations (`eval/`), sample fixtures (`sample_files/`), and documentation (`docs/`, including design records dated Oct 29–31). Technical contributions:
 
 - **Application architecture and end-to-end workflows** — local-first pipeline from folder add through indexing, memory formation, retrieval, and cited answers, served identically over CLI, HTTP API, and a dependency-free web UI.
 - **Multimodal file ingestion and content extraction** — PDF text layer plus scanned-page OCR, TXT, DOCX, image understanding, and timestamped audio transcription, with SHA-256 fingerprinting, incremental re-index, and explicit per-file statuses (`indexed` / `partial` / `skipped` / `failed`).
@@ -59,7 +71,7 @@ Yaad was designed and built from scratch during the hackathon window (October 27
 - **Evidence verification and honest abstention** — deterministic relationship validation, claim-level checks (citation existence, excerpt containment, numeric/date consistency, chronology), and a staged answer pipeline that returns `not_found`/`unverified` instead of guessing (`yaad/memory/relationships.py`, `yaad/query/verify.py`, `pipeline.py`).
 - **Privacy, consent, egress, and spend safeguards** — per-folder consent AND a global cloud kill-switch on every external call, per-stage spend ceilings, identifier redaction on cloud-bound payloads, prompt-injection quarantine, and a per-attempt egress receipt log surfaced in Privacy views.
 - **Meta model integrations** — Muse Spark 1.3 (default) for PDF/image understanding, structured memory-candidate extraction, link verification, joint two-image comparison, and answer review; Meta Voice Transcribe 1.0 for all audio transcription. Every model output is schema-validated and evidence-checked by deterministic code that keeps final authority ("Models Propose. Evidence Disposes."). The Ollama/Glimmer local path is implemented but experimental with real-weight quality unverified; Spark 1.2/1.1 and Wonder are allowlisted only. Yaad is a staged retrieval-and-verification pipeline, not an autonomous multi-agent system.
-- **Evaluation and demo** — 882-test suite, frozen 72-case benchmark, real-model eval series with preserved receipts, Meta capability suite, sample fixtures, video walkthrough, and pitch deck.
+- **Evaluation and demo** — 900+ test suite, frozen 72-case benchmark, real-model eval series with preserved receipts, Meta capability suite, sample fixtures, video walkthrough, and pitch deck.
 
 ## Key features
 
@@ -152,7 +164,11 @@ yaad ask "What is the registration fee?"
 yaad serve   # open http://127.0.0.1:8000
 ```
 
+Security note: .env holds your Meta API key and is gitignored. Never commit it, zip it, or share it. To share the project, share the repository (git clone) rather than the working folder. If a key is ever exposed, rotate it immediately. You can also skip the file and set MODEL_API_KEY in your shell environment instead.
+
 The `sample_files/` demo fixtures (event proposal, poster, organizer notes, workshop notices, and a synthetic AI-generated voice note on deadlines and workshop topics, approved for publication) index end-to-end so you can try Ask, Memory, History, and Privacy views immediately. Cloud consent defaults off per folder; consented PDFs, scanned page images, images, audio, and question-relevant excerpts may be sent to Meta when `YAAD_CLOUD_ENABLED=true`. TXT and DOCX are always indexed locally. The database defaults to `~/.yaad/yaad.sqlite3`; originals are never copied into it. To recover the search index: `yaad rebuild-fts`.
+
+Without a MODEL_API_KEY (or with YAAD_CLOUD_ENABLED=false), indexing still runs locally, but some PDF and image files are indexed as partial, and Ask returns cited keyword evidence instead of synthesized memory answers. Memory records and conflict verdicts need cloud or local-model extraction.
 
 Local inference (experimental): install Ollama, `ollama pull muse-glimmer:30b`, set `YAAD_MODEL_PROVIDER=local` in `.env`, restart. Local mode fails closed and never falls back to cloud. Full guide and limits: [docs/LOCAL_INFERENCE.md](docs/LOCAL_INFERENCE.md).
 
@@ -217,12 +233,12 @@ pip install -e ".[dev]"
 # Generate gitignored test fixtures first (fresh clones only; refuse to overwrite):
 python scripts/make_capability_fixtures.py && python scripts/make_synthetic_data.py
 python scripts/make_real_eval_v2_data.py && python scripts/make_real_eval_v3_data.py && python scripts/make_hostel_eval_data.py
-python -m pytest tests/ -q        # 882 passed, 18 skipped, 1 known order-dependent failure (verified 2026-11-04; see below)
+python -m pytest tests/ -q        # 896 passed, 5 skipped, 0 failed (macOS, Python 3.11, verified 2026-11-05)
 python eval/run_eval.py            # 3/3 retrieval, 1/1 abstention on synthetic fixtures
 node --check yaad/ui/app.js        # UI syntax check
 ```
 
-One folder-picker test fails only in full-suite runs and passes in isolation (known order dependence); the suite otherwise passes with no external network calls — Meta interactions use a fake client, and local-mode contract tests use a loopback fake server. Byte-exact sample outputs: [docs/EVALUATION_TRACES.md](docs/EVALUATION_TRACES.md) and `docs/traces/`. The `eval/` directory holds the deterministic harness plus real-model evaluations with preserved receipts; the tiny synthetic harness checks contracts on fixtures, not broad accuracy.
+The suite runs with no external network calls: Meta interactions use a fake client, and local-mode contract tests use a loopback fake server. tests/conftest.py points YAAD_DB_PATH at a temporary directory, so running the tests never touches your real ~/.yaad database. 5 browser end-to-end tests are skipped unless Playwright browsers are installed (playwright install chromium). In sandboxes that forbid loopback servers, 13 additional local-inference tests are skipped. Byte-exact sample outputs: [docs/EVALUATION_TRACES.md](docs/EVALUATION_TRACES.md) and `docs/traces/`. The `eval/` directory holds the deterministic harness plus real-model evaluations with preserved receipts; the tiny synthetic harness checks contracts on fixtures, not broad accuracy.
 
 ## Project structure
 

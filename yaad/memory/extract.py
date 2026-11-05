@@ -268,7 +268,7 @@ def _verify_proposed_links(con, settings, client, local: bool,
     info = client.last_call or {}
     verify_usage["input_tokens"] = info.get("input_tokens", 0)
     verify_usage["output_tokens"] = info.get("output_tokens", 0)
-    verify_usage["input_tokens_details"]["cached_tokens"] = info.get("cached_tokens", 0)
+    verify_usage["input_tokens_details"]["cached_tokens"] = (info.get("cached_tokens") or 0)
     if not local:
         spend += estimate_text_cost_usd(settings.model, verify_usage)
     seen: set[int] = set()
@@ -476,7 +476,7 @@ def _propose_missing_links(con, settings, client, local: bool, folder_id: int,
     info = client.last_call or {}
     usage["input_tokens"] = info.get("input_tokens", 0)
     usage["output_tokens"] = info.get("output_tokens", 0)
-    usage["input_tokens_details"]["cached_tokens"] = info.get("cached_tokens", 0)
+    usage["input_tokens_details"]["cached_tokens"] = (info.get("cached_tokens") or 0)
     if not local:
         spend += estimate_text_cost_usd(settings.model, usage)
     seen: set[int] = set()
@@ -563,7 +563,7 @@ def run_extraction(db, folder_id: int, run_id: str, settings, client,
     info = client.last_call or {}
     usage = {"input_tokens": info.get("input_tokens", 0),
              "output_tokens": info.get("output_tokens", 0),
-             "input_tokens_details": {"cached_tokens": info.get("cached_tokens", 0)}}
+             "input_tokens_details": {"cached_tokens": (info.get("cached_tokens") or 0)}}
     spend = 0.0 if local else estimate_text_cost_usd(settings.model, usage)
     if spend > max_spend_usd:
         _record_extraction_attempt(db, settings, prompt, info, spend, 0, "spend_cap_exceeded")

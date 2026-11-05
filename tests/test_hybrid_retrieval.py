@@ -19,6 +19,8 @@ import pytest
 
 from test_memory_answers import Store, candidate
 from yaad.query.hybrid import (
+    CHANNELS,
+    OPTIONAL_CHANNELS,
     fold_term,
     hybrid_search,
     phrase_hits,
@@ -200,9 +202,11 @@ def test_channel_ablation_and_validation(tmp_path):
     assert memory == ["ev_hidden", "ev_seen"]
     assert set(both) == {"ev_seen", "ev_hidden"}
     with pytest.raises(ValueError):
-        hybrid_search(store.db, question, channels=("semantic",))
+        hybrid_search(store.db, question, channels=("bogus",))
     with pytest.raises(ValueError):
-        retrieve_channel(store.db, question, "semantic")
+        retrieve_channel(store.db, question, "bogus")
+    assert "semantic" in OPTIONAL_CHANNELS
+    assert "semantic" not in CHANNELS
 
 
 # --- verdict neutrality: Tier C never influences answers ---
